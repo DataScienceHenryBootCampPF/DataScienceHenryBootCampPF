@@ -8,9 +8,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Datos (Kaggle suele pedir no resubir sus datasets, y pesan)
-data/raw/*.csv
-data/processed/*.csv
 
 # MLflow (Para que no se suban los experimentos locales)
 mlruns/
