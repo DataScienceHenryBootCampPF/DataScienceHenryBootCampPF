@@ -1,0 +1,23 @@
+# Entorno Virtual
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Datos (Kaggle suele pedir no resubir sus datasets, y pesan)
+data/raw/*.csv
+data/processed/*.csv
+
+# MLflow (Para que no se suban los experimentos locales)
+mlruns/
+mlartifacts/
+
+# Configuraciones de VS Code
+.vscode/
+
+# Variables de entorno (donde guardarías contraseñas o API Keys)
+.env
