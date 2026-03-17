@@ -5,12 +5,13 @@ from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from sklearn.model_selection import cross_val_score, GridSearchCV
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
+from sklearn.compose import ColumnTransformer
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
-from preprocessing import CoffeeDataPreprocessor
 import warnings
 warnings.filterwarnings('ignore')
 
