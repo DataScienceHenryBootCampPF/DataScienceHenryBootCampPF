@@ -33,12 +33,12 @@ if __name__ == "__main__":
     data_path = os.path.join(project_root, "data", "processed", "coffee_data_cleaned_final.csv")
     output_dir = os.path.join(project_root, "models", "prediction")
     
-    print(f" Ruta corregida de datos: {data_path}")
-    print(f" Ruta corregida de salida: {output_dir}")
+    print(f"📁 Ruta corregida de datos: {data_path}")
+    print(f"📁 Ruta corregida de salida: {output_dir}")
     
     engineer = CoffeeFeatureEngineer(data_path, output_dir)
     processed_path = engineer.run_full_pipeline()
     
     if processed_path:
-        print(f"\n Feature engineering completado!")
-        print(f" Usa el archivo {processed_path} para entrenar modelos")
+        print(f"\n🎉 Feature engineering completado!")
+        print(f"📁 Usa el archivo {processed_path} para entrenar modelos")
