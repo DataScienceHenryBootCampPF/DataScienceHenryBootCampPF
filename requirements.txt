@@ -4,4 +4,7 @@ matplotlib
 seaborn
 scikit-learn
 nbformat
+joblib
+scipy
+imbalanced-learn
 ipykernel
