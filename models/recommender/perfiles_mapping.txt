@@ -1,0 +1,1 @@
+{0: 'Vibrante y Cítrico', 1: 'Balanceado y Dulce', 2: 'Balanceado y Dulce'}
