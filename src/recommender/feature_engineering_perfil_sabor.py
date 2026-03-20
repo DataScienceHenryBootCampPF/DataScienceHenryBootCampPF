@@ -35,7 +35,6 @@ class CoffeeFlavorProfiler:
         return nombres
 
     def run_pipeline(self, df):
-        print("🚀 Iniciando Pipeline de Perfilamiento de Sabor...")
 
         # 1. Limpieza de nulos
         df_clean = df.dropna(subset=self.features_sabor).copy()
@@ -78,8 +77,8 @@ if __name__ == "__main__":
         profiler = CoffeeFlavorProfiler()
         df_resultados = profiler.run_pipeline(df_input)
         
-        print("\n📊 Resumen de Segmentación Final (Sprint 1):")
+        print("\n Resumen de Segmentación Final (Sprint 1):")
         print("-" * 40)
         print(df_resultados['Perfil_Nombre'].value_counts())
     else:
-        print(f"❌ No se encontró el dataset en {data_path}")
+        print(f"No se encontró el dataset en {data_path}")
