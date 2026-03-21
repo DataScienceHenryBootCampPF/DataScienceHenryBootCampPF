@@ -13,6 +13,7 @@ import numpy as np
 import joblib
 import os
 from datetime import datetime
+from src.predictor.recommendation_system import HybridCoffeeRecommendationSystem
 
 class CoffeeQualityPredictor:
     """
@@ -193,7 +194,6 @@ def create_sample_coffees():
                 'Processing.Method': 'Washed / Wet',
                 'Color': 'Green',
                 'Owner': 'Ethiopian Coffee Exporter',
-                # Features adicionales creadas por feature engineering
                 'altitude_category': 'Media-Alta',
                 'altitude_std': 0.5,
                 'sensory_avg': 8.6,
@@ -228,7 +228,6 @@ def create_sample_coffees():
                 'Processing.Method': 'Washed / Wet',
                 'Color': 'Green',
                 'Owner': 'Colombian Coffee Farm',
-                # Features adicionales
                 'altitude_category': 'Media',
                 'altitude_std': 0.0,
                 'sensory_avg': 8.3,
@@ -263,7 +262,6 @@ def create_sample_coffees():
                 'Processing.Method': 'Natural / Dry',
                 'Color': 'Blue-Green',
                 'Owner': 'Vietnam Coffee Corporation',
-                # Features adicionales
                 'altitude_category': 'Baja',
                 'altitude_std': -1.5,
                 'sensory_avg': 6.7,
@@ -298,7 +296,6 @@ def create_sample_coffees():
                 'Processing.Method': 'Washed / Wet',
                 'Color': 'Green',
                 'Owner': 'Kenya Coffee Estate',
-                # Features adicionales
                 'altitude_category': 'Alta',
                 'altitude_std': 1.0,
                 'sensory_avg': 8.7,
@@ -361,69 +358,161 @@ def interactive_prediction():
     
     return input_data
 
+def interactive_recommendation():
+    """
+    Interfaz interactiva para recomendaciones.
+    
+    - Inicializa HybridCoffeeRecommendationSystem
+    - Solicita inputs para las 6 variables
+    - Solicita opción de filtro por especie
+    - Ejecuta recomendar()
+    - Muestra resultados
+    """
+    print("\n🔮 SISTEMA DE RECOMENDACIÓN HÍBRIDO")
+    print("="*50)
+    print("Encuentra cafés similares basándote en tu perfil sensorial preferido.")
+    print("Deja en blanco las características que no te importen (se usará el promedio).")
+    print("Valores entre 0 y 10.\n")
+    
+    try:
+        # Inicializar sistema
+        recommender = HybridCoffeeRecommendationSystem()
+        
+        inputs = {}
+        features = ['Flavor', 'Aftertaste', 'Aroma', 'Acidity', 'Body', 'Balance']
+        
+        # Solicitar inputs
+        at_least_one = False
+        while not at_least_one:
+            for feat in features:
+                val = input(f"   - {feat}: ").strip()
+                if val:
+                    try:
+                        inputs[feat] = float(val)
+                        at_least_one = True
+                    except ValueError:
+                        print(f"   ⚠️ Valor inválido para {feat}, se ignorará.")
+            
+            if not at_least_one:
+                print("\n⚠️ Debes especificar al menos una característica.")
+                retry = input("¿Intentar de nuevo? (S/N): ").lower()
+                if retry != 's':
+                    return
+
+        # Filtro por especie
+        species_input = input("\n🌱 ¿Filtrar por especie? (Arabica/Robusta/Enter para omitir): ").strip()
+        species = species_input if species_input else None
+        
+        # Ejecutar recomendación
+        print("\n🔍 Buscando cafés similares...")
+        recommendations = recommender.recomendar(
+            Flavor=inputs.get('Flavor'),
+            Aftertaste=inputs.get('Aftertaste'),
+            Aroma=inputs.get('Aroma'),
+            Acidity=inputs.get('Acidity'),
+            Body=inputs.get('Body'),
+            Balance=inputs.get('Balance'),
+            species=species
+        )
+        
+        if recommendations is not None and not recommendations.empty:
+            print(f"\n🏆 TOP 10 CAFÉS RECOMENDADOS (Ordenados por Calidad)")
+            print("="*60)
+            
+            # Formato de visualización
+            pd.set_option('display.max_columns', None)
+            pd.set_option('display.width', 1000)
+            
+            display_cols = ['Country.of.Origin', 'Region', 'Species', 'Total.Cup.Points', 'similarity_score']
+            # Añadir las columnas de features que el usuario especificó
+            display_cols.extend([k for k in inputs.keys() if k in recommender.SIMILARITY_FEATURES])
+            
+            # Limpiar columnas que no existen en el df
+            display_cols = [c for c in display_cols if c in recommendations.columns]
+            
+            print(recommendations[display_cols].to_string(index=False))
+            print("\n" + "="*60)
+            
+        else:
+            print("\n❌ No se encontraron recomendaciones con esos criterios.")
+            
+    except Exception as e:
+        print(f"\n❌ Ocurrió un error en el sistema de recomendación: {e}")
+
 def main():
     """
     Función principal del demo.
     """
-    print("🚀 DEMO DE PREDICCIÓN DE CALIDAD DE CAFÉ")
+    print("🚀 SISTEMA INTEGRADO DE CAFÉ (Predicción + Recomendación)")
     print("="*60)
     print(f"📅 Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"🎯 Objetivo: Predecir la calidad del café usando ML")
     
     try:
-        # Inicializar predictor
-        predictor = CoffeeQualityPredictor()
-        
-        # Menú de opciones
-        print("\n📋 MENÚ DE OPCIONES:")
-        print("1. Probar ejemplos predefinidos")
-        print("2. Predicción interactiva")
-        print("3. Salir")
-        
-        option = input("\nSelecciona una opción [1]: ") or "1"
-        
-        if option == "1":
-            # Probar ejemplos predefinidos
-            sample_coffees = create_sample_coffees()
+        # Intentar cargar predictor para verificar modelos (sin fallar si no existen)
+        predictor = None
+        try:
+            predictor = CoffeeQualityPredictor()
+            models_loaded = True
+        except:
+            models_loaded = False
+            print("⚠️ Advertencia: Modelos de predicción no encontrados. La opción 1 estará deshabilitada.")
+
+        while True:
+            print("\n╔════════════════════════════════════════╗")
+            print("║   COFFEE QUALITY SYSTEM - MAIN MENU    ║")
+            print("╠════════════════════════════════════════╣")
+            print("║ 1. Predecir calidad (ML)               ║")
+            print("║ 2. Recomendar cafés similares          ║")
+            print("║ 3. Salir                               ║")
+            print("╚════════════════════════════════════════╝")
             
-            print(f"\n🧪 PROBANDO {len(sample_coffees)} EJEMPLOS DE CAFÉ")
-            print("="*60)
+            choice = input("\nSelecciona una opción [1-3]: ").strip()
             
-            for i, coffee in enumerate(sample_coffees, 1):
-                print(f"\n🔸 EJEMPLO {i}: {coffee['name']}")
-                print(f"📝 {coffee['description']}")
+            if choice == "1":
+                if models_loaded and predictor:
+                    # Menú interno de predicción
+                    print("\n📋 MODOS DE PREDICCIÓN:")
+                    print("1. Probar ejemplos predefinidos")
+                    print("2. Predicción interactiva")
+                    print("3. Volver al menú principal")
+                    
+                    sub_opt = input("\nOpción [1]: ") or "1"
+                    
+                    if sub_opt == "1":
+                        sample_coffees = create_sample_coffees()
+                        print(f"\n🧪 PROBANDO {len(sample_coffees)} EJEMPLOS DE CAFÉ")
+                        for i, coffee in enumerate(sample_coffees, 1):
+                            print(f"\n🔸 EJEMPLO {i}: {coffee['name']}")
+                            print(f"📝 {coffee['description']}")
+                            results = predictor.predict_quality(coffee['data'])
+                            predictor.print_prediction_result(coffee['data'], results)
+                            if i < len(sample_coffees):
+                                input("\nPresiona Enter para continuar...")
+                                
+                    elif sub_opt == "2":
+                        data = interactive_prediction()
+                        if data:
+                            print(f"\n🔮 REALIZANDO PREDICCIÓN...")
+                            results = predictor.predict_quality(data)
+                            predictor.print_prediction_result(data, results)
+                            
+                    elif sub_opt == "3":
+                        continue
+                else:
+                    print("❌ Funcionalidad no disponible (faltan modelos).")
+                    
+            elif choice == "2":
+                interactive_recommendation()
                 
-                # Predecir
-                results = predictor.predict_quality(coffee['data'])
+            elif choice == "3":
+                print("👋 ¡Hasta luego!")
+                break
                 
-                # Mostrar resultados
-                predictor.print_prediction_result(coffee['data'], results)
+            else:
+                print("❌ Opción inválida")
                 
-                if i < len(sample_coffees):
-                    input("\nPresiona Enter para continuar al siguiente ejemplo...")
-        
-        elif option == "2":
-            # Predicción interactiva
-            input_data = interactive_prediction()
-            
-            print(f"\n🔮 REALIZANDO PREDICCIÓN...")
-            results = predictor.predict_quality(input_data)
-            
-            predictor.print_prediction_result(input_data, results)
-        
-        elif option == "3":
-            print("👋 ¡Hasta luego!")
-            return
-        
-        else:
-            print("❌ Opción no válida")
-        
-        print(f"\n✅ Demo completado exitosamente!")
-        print(f"💡 Para más análisis, revisa el notebook: notebooks/model_analysis.ipynb")
-        
     except Exception as e:
-        print(f"❌ Error en el demo: {e}")
-        print("💡 Asegúrate de haber ejecutado primero el pipeline completo de entrenamiento")
+        print(f"❌ Error fatal en el programa: {e}")
 
 if __name__ == "__main__":
     main()
