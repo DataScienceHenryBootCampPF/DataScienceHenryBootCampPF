@@ -60,29 +60,7 @@ F. Altitud
  - altitude_high_meters: Valor máximo del rango de altitud en metros.
  - altitude_mean_meters: Promedio de altitud calculado y normalizado
 
-3. Data Preprocessing
- 
-La etapa de preprocesamiento consistió en la transformación de un archivo con errores, nulos y unidades mezcladas en una matriz numérica limpia lista para que los modelos de ML puedan aprender. Para transformar el dataset original en un conjunto de datos apto para el modelado, se aplicaron las siguientes etapas:
-
-A. Vista inicial del Dataset 
-
-Se identifico el número de registros y columnas (1339 y 44 respectivamente). Además del analisis estadistico por columna se detectó lo siguiente:
-
- - Inconsistencia en Altitud: Presencia de outliers extremos (190km+) que distorsionan la media. Requiere tratamiento por mediana o filtrado físico.
-
- - Registros Truncados: Valores mínimos de 0.0 en variables sensoriales indican datos faltantes o errores de carga que deben ser removidos.
-
- - Baja Variabilidad: Atributos como 'Sweetness' y 'Clean.Cup' presentan una concentración excesiva en el valor máximo (10.0), aportando poco valor predictivo.
-
-Otros puntos importantes:
-
- - No se detectaron registros duplicados
-
- - Se identificó un fuerte desbalance de clases entre Arabica (n=1311) y Robusta (n=28), lo que justificó un tratamiento diferenciado de variables como la altitud y el método de procesamiento durante la etapa de limpieza, evitando que la mayoría (Arabica) diluya las particularidades de la minoría (Robusta).
-
- - El análisis de nulos reveló una criticidad extrema en Lot.Number (79% de faltantes), justificando su descarte inmediato. Para el resto de las variables con nulos moderados (12% al 20%), como la altitud y variedades, se optó por una estrategia de imputación jerárquica para preservar la integridad del volumen de datos (1339 muestras) sin introducir sesgos significativos.
-
-B. Metodología de Data Preprocessing
+3. Metodología de Data Preprocessing
 
 Para transformar un archivo crudo de 1339 registros y 44 columnas en una matriz apta para Machine Learning, se aplicó un pipeline de limpieza bajo un enfoque de integridad estadística:
 
