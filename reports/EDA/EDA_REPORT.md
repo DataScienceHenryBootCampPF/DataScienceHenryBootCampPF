@@ -123,19 +123,19 @@ Para transformar un archivo crudo de 1339 registros y 44 columnas en una matriz 
 
 A. El dataset presenta un fuerte sesgo negativo hacia la alta calidad. La media (82.16) y la mediana (82.50) están casi solapadas, con el 75% de los datos por encima de los 81 puntos. En este sentido, el modelo de ML debe ser extremadamente preciso, ya que la diferencia entre un café "Estándar" y uno "Premium" se juega en un rango muy estrecho de puntaje.
 
-![Distribución Puntaje Total](reports/EDA/images/Dist._PuntajeTotal.png)
+![Distribución Puntaje Total](images/Dist._PuntajeTotal.png)
 
 B. Geografía y Calidad: Etiopía ostenta el puntaje promedio más alto (85.48) y el máximo histórico (90.58), consolidándose como el benchmark mundial. Países como El Salvador muestran una producción muy uniforme (baja desviación en altitud), mientras que Kenia y EE. UU. mantienen alta calidad bajo condiciones geográficas muy variadas.
 
-![Puntaje Promedio por País](reports/EDA/images/PuntajeProm_Pais.png)
+![Puntaje Promedio por País](images/PuntajeProm_Pais.png)
 
 C. El Mito de la Altitud (r = 0.20): Contrario a la creencia popular, la correlación entre altitud y calidad es débil-positiva. Conclusión: Si bien la altura ayuda a la densidad del grano, el procesamiento humano y la variedad botánica pueden compensar la falta de metros. Hay cafés a 1000m que superan técnicamente a lotes cultivados a 2000m.
 
-![Altura vs Calidad](reports/EDA/images/Altura_vs_Calidad.png)
+![Altura vs Calidad](images/Altura_vs_Calidad.png)
 
 D. Análisis Sensorial y de Procesamiento: El método Washed es el más común, pero los métodos artesanales como el Honey están logrando picos de calidad superiores, lo que sugiere un mercado creciente para procesos diferenciados.
 
-![Método de Procesamiento vs Calidad](reports/EDA/images/Metodo_Procesamiento_Calidad.png)
+![Método de Procesamiento vs Calidad](images/Metodo_Procesamiento_Calidad.png)
 
 E. Atributos como Sweetness y Clean Cup no predicen el puntaje final, sino que actúan como "requisitos mínimos": si no son perfectos, el café sale del circuito de especialidad.
 
@@ -143,6 +143,6 @@ F. Variedades de Altura: Las variedades SL14 y Gesha se posicionan como la gama 
 
 G. Tendencia de Rigurosidad: Se observa una caída en los puntajes máximos desde 2015 a 2018. Esto no indica necesariamente granos de menor calidad, sino que podría darse por una mayor exigencia y rigurosidad técnica de los catadores certificados.
 
-![Evolución Puntaje Máximo](reports/EDA/images/Evolución_PuntajeMax.png)
+![Evolución Puntaje Máximo](images/Evolución_PuntajeMax.png)
 
 Tras la consolidación del dataset, el proyecto avanzará hacia la implementación de inteligencia artificial para resolver dos necesidades de negocio: la predicción de calidad y la personalización de la oferta.
