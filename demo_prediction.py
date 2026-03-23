@@ -30,9 +30,8 @@ def ejecutar_demo():
         df_train = pd.read_csv(path_data)
         df_results = pd.read_csv(path_metrics)
         
-        # Cargamos el mejor modelo (SVR según tus resultados)
         best_model_name = df_results.iloc[0]['Model']
-        mae_modelo = df_results.iloc[0]['MAE'] # Usamos el MAE real del ranking (aprox 1.4)
+        mae_modelo = df_results.iloc[0]['MAE'] 
         best_model = joblib.load(os.path.join(path_models, f"coffee_model_{best_model_name}.pkl"))
 
         print("\n" + "="*60)
@@ -42,28 +41,24 @@ def ejecutar_demo():
 
         inputs_usuario = {}
 
-        # 1. Selección de PAÍS
         paises = sorted(df_train['Country.of.Origin'].unique())
         print("\n--- Seleccione País de Origen ---")
         mostrar_opciones_lista(paises)
         pais_sel = paises[int(input("Número de País: "))]
         inputs_usuario['Country.of.Origin'] = [pais_sel]
 
-        # 2. Selección de REGIÓN (CASCADA)
         regiones = sorted(df_train[df_train['Country.of.Origin'] == pais_sel]['Region'].unique())
         print(f"\n--- Seleccione Región de {pais_sel} ---")
         mostrar_opciones_lista(regiones)
         region_sel = regiones[int(input("Número de Región: "))]
         inputs_usuario['Region'] = [region_sel]
 
-        # 3. Resto de variables categóricas (Variety, Proceso, Color)
         for col, nombre in {'Variety': 'Variedad', 'Processing.Method': 'Proceso', 'Color': 'Color'}.items():
             opciones = sorted(df_train[col].dropna().unique())
             print(f"\n--- Seleccione {nombre} ---")
             mostrar_opciones_lista(opciones)
             inputs_usuario[col] = [opciones[int(input(f"Número de {nombre}: "))]]
 
-        # 4. Altitud con LÍMITES
         df_geo = df_train[(df_train['Country.of.Origin'] == pais_sel) & (df_train['Region'] == region_sel)]
         alt_min, alt_max = df_geo['altitude_mean_meters'].min(), df_geo['altitude_mean_meters'].max()
 
@@ -71,7 +66,6 @@ def ejecutar_demo():
         print(f"💡 En {region_sel}, el rango histórico es {alt_min:.0f}m - {alt_max:.0f}m")
         altitud = float(input(f"Ingrese altitud (msnm): "))
 
-        # 5. Predicción
         data_final = pd.DataFrame({
             **inputs_usuario,
             'categoria_altitud': ['Alta' if altitud > 1200 else 'Media' if altitud > 800 else 'Baja'],
@@ -83,7 +77,6 @@ def ejecutar_demo():
 
         pred = best_model.predict(data_final)[0]
         
-        # Lógica de la Mediana y Rango de Confianza
         umbral_mediana = 82.5
         limite_inf = pred - mae_modelo
         limite_sup = pred + mae_modelo
@@ -94,7 +87,6 @@ def ejecutar_demo():
         print(f"Rango de Confianza (95%): {limite_inf:.2f} a {limite_sup:.2f}")
         print("-" * 40)
         
-        # Clasificación basada en Mediana (Nivel Superior)
         if pred >= umbral_mediana:
             print(f"🏆 CATEGORÍA: PREMIUM")
             print(f"   (Puntaje por encima de la mediana del mercado)")

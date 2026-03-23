@@ -1,6 +1,6 @@
 1. Introducción y Contexto del Proyecto
 
-Este reporte analiza el dataset de Coffee Quality Institute, que contiene evaluaciones sensoriales y físicas de lotes de café de todo el mundo. El objetivo principal es entender qué factores determinan el Total Cup Points (nuestra variable objetivo) para predecir o clasificar la calidad del grano.
+Este reporte analiza el dataset del Coffee Quality Institute, que contiene evaluaciones técnicas de lotes de café de todo el mundo. El objetivo es desentrañar los factores físicos (altitud, país, especie) y sensoriales (aroma, cuerpo, acidez) que determinan el Total Cup Points (variable objetivo) para predecir la calidad del grano en el mercado de especialidad.
 
 2. Diccionario de Datos
 DICCIONARIO DE DATOS: COFFE QUALITY DATASET
@@ -69,13 +69,17 @@ A. Vista inicial del Dataset
 Se identifico el número de registros y columnas (1339 y 44 respectivamente). Además del analisis estadistico por columna se detectó lo siguiente:
 
  - Inconsistencia en Altitud: Presencia de outliers extremos (190km+) que distorsionan la media. Requiere tratamiento por mediana o filtrado físico.
+
  - Registros Truncados: Valores mínimos de 0.0 en variables sensoriales indican datos faltantes o errores de carga que deben ser removidos.
+
  - Baja Variabilidad: Atributos como 'Sweetness' y 'Clean.Cup' presentan una concentración excesiva en el valor máximo (10.0), aportando poco valor predictivo.
 
 Otros puntos importantes:
 
  - No se detectaron registros duplicados
+
  - Se identificó un fuerte desbalance de clases entre Arabica (n=1311) y Robusta (n=28), lo que justificó un tratamiento diferenciado de variables como la altitud y el método de procesamiento durante la etapa de limpieza, evitando que la mayoría (Arabica) diluya las particularidades de la minoría (Robusta).
+
  - El análisis de nulos reveló una criticidad extrema en Lot.Number (79% de faltantes), justificando su descarte inmediato. Para el resto de las variables con nulos moderados (12% al 20%), como la altitud y variedades, se optó por una estrategia de imputación jerárquica para preservar la integridad del volumen de datos (1339 muestras) sin introducir sesgos significativos.
 
  --- Columnas con Valores Faltantes ---
@@ -100,58 +104,45 @@ Owner                        7            0.52
 Country.of.Origin            1            0.07
 Quakers                      1            0.07
 
-B. Limpieza y normalización de la estructura
+B. Metodología de Data Preprocessing
 
-Mediante el archivo "cleaning.py" se eliminaron casi 20 columnas que no tenían información relevante (IDs, fechas de expiración, contactos, etc.), reduciendo la dimensionalidad. Así mismo, se eliminaron registros de Total.Cup.Points (la variable objetivo) == 0 ya que arruinarian cualquier tipo de entrenamiento.
+Para transformar un archivo crudo de 1339 registros y 44 columnas en una matriz apta para Machine Learning, se aplicó un pipeline de limpieza bajo un enfoque de integridad estadística:
 
-La imputación inteligente se realizó por grupos:
+ - Reducción de Dimensionalidad: Se descartaron columnas con nulos masivos (Lot.Number 79%) o sin valor predictivo (IDs, contactos).
+ 
+ - Tratamiento de la Altitud: Se unificaron unidades (pies a metros) y se eliminaron outliers espaciales (>4000m) que distorsionaban las medias.
+ 
+ - Imputación Jerárquica: Los valores faltantes se completaron usando la Moda (categóricas) y Mediana (numéricas) basadas en la combinación País + Especie, respetando la biología de la planta (Arabica vs. Robusta).
 
- - Para el Color o el Método de Procesamiento, no usas la moda de todo el dataset. El código mira la moda por País y por Especie.
- - Si falta la altitud, primero busca la mediana del país/especie. Si aun así no la encuentra, usa la mediana global de la especie.
- - Se detectaron unidades de medidas de altura sobre el nivel del mar diferentes (m y ft), con lo cual la normalización se realizó modificando los valores que estaban en pies (ft) para pasarlos a metros, multiplicando este valor por 0.3048
+ - Feature Engineering: 
+    * Se creó Nombre_Comercial para dar identidad de marketing a cada lote.
+    
+    * Se eliminaron variables sin varianza (Sweetness, Clean.Cup, Uniformity), ya que en café de especialidad casi siempre son 10/10 y no ayudan a predecir diferencias.
+        
+4. Hallazgos Clave del Análisis Visual (EDA)
 
-Por ultimo se eliminaron 6 registros con altitudes físicamente imposibles (>4000m) que representaban errores de carga y distorsionaban el análisis estadístico.
+A. El dataset presenta un fuerte sesgo negativo hacia la alta calidad. La media (82.16) y la mediana (82.50) están casi solapadas, con el 75% de los datos por encima de los 81 puntos. En este sentido, el modelo de ML debe ser extremadamente preciso, ya que la diferencia entre un café "Estándar" y uno "Premium" se juega en un rango muy estrecho de puntaje.
 
+![Distribución Puntaje Total](EDA/images/Dist._PuntajeTotal.png)
 
-4. Análisis Exploratorio de Datos
+B. Geografía y Calidad: Etiopía ostenta el puntaje promedio más alto (85.48) y el máximo histórico (90.58), consolidándose como el benchmark mundial. Países como El Salvador muestran una producción muy uniforme (baja desviación en altitud), mientras que Kenia y EE. UU. mantienen alta calidad bajo condiciones geográficas muy variadas.
 
-En el archivo EDA se verifico que los datos esten normalizados correctamente mediante 3 tipos de analisis de variables: Univariado, Bivariado y Multivariado.
+![Puntaje Promedio por País](EDA/images/PuntajeProm_Pais.png)
 
-1. Distribución del Target (Histograma): Mostrar cómo se distribuye el Total.Cup.Points (que en tu tabla vemos que va de 59 a 90, con mediana de 82.5). Esto prueba que tenés datos variados para entrenar.
+C. El Mito de la Altitud (r = 0.20): Contrario a la creencia popular, la correlación entre altitud y calidad es débil-positiva. Conclusión: Si bien la altura ayuda a la densidad del grano, el procesamiento humano y la variedad botánica pueden compensar la falta de metros. Hay cafés a 1000m que superan técnicamente a lotes cultivados a 2000m.
 
-2. Heatmap de Correlación: Es obligatoria. Muestra qué variables (Aroma, Flavor, Aftertaste, Altitud) están más ligadas al puntaje. Con los datos limpios, vas a ver que la altitud ahora sí "pesa" en la relación.
+![Altura vs Calidad](EDA/images/Altura_vs_Calidad.png)
 
-3. Scatter Plot (Altitud vs Total Cup Points): Para mostrar la tendencia. Con 1,332 datos, verás una nube densa que sube ligeramente a medida que aumenta la altura.
+D. Análisis Sensorial y de Procesamiento: El método Washed es el más común, pero los métodos artesanales como el Honey están logrando picos de calidad superiores, lo que sugiere un mercado creciente para procesos diferenciados.
 
-4. Scatter Plot (Humedad vs Total Cup Points): Para mostrar la tendencia.
+![Método de Procesamiento vs Calidad](EDA/images/Metodo_Procesamiento_Calidad.png)
 
-5. Graficos descriptivos adicionales
+E. Atributos como Sweetness y Clean Cup no predicen el puntaje final, sino que actúan como "requisitos mínimos": si no son perfectos, el café sale del circuito de especialidad.
 
+F. Variedades de Altura: Las variedades SL14 y Gesha se posicionan como la gama más alta, cultivándose consistentemente por encima de los 1500m.
 
+G. Tendencia de Rigurosidad: Se observa una caída en los puntajes máximos desde 2015 a 2018. Esto no indica necesariamente granos de menor calidad, sino que podría darse por una mayor exigencia y rigurosidad técnica de los catadores certificados.
 
+![Evolución Puntaje Máximo](EDA/images/Evolución_PuntajeMax.png)
 
-
-
-
-2. ¿Por qué se producen esos errores? (Los 3 culpables)
-Ese 27% de veces que el modelo falla, suele ser por estas razones:
-
-Variables "Invisibles": Dos cafés de la misma región, misma variedad y misma altitud pueden tener puntajes distintos porque uno se secó al sol 2 días más que el otro. Como esa info no está en tu Excel, el modelo les asigna el mismo puntaje a ambos, y a uno le erra.
-
-El factor "Catador": La diferencia entre 82.3 y 82.7 es subjetiva. Un catador puede estar de buen humor y poner un 83, y otro un 82. Tu modelo intenta buscar una lógica matemática donde a veces hay una opinión humana.
-
-Outliers Geográficos: Alguna finca en una zona baja que, por un microclima especial, sacó un puntaje altísimo. El modelo, al ver que la altitud es baja, va a predecir un puntaje bajo. Ese punto va a aparecer muy lejos de la línea de perfección en tu gráfico.
-
-El error del modelo es marginal; se concentra en la zona de transición de la mediana. El modelo no confunde un café excelente con uno malo, sino que la incertidumbre aparece en la frontera donde la diferencia sensorial es mínima para los datos disponibles."
-
-
-En la industria del café (SCA), la diferencia entre un 82 y un 84 no es solo un número; es un salto de precio, de mercado y de prestigio. Por eso, que tu modelo tenga un MAE de 1.4 es a la vez un logro y una limitación que tenés que saber "vender".
-
-1. La "Lupa" del Especialista
-Si un termómetro tiene un error de 1 grado, para saber si tenés fiebre (37°C vs 38°C) es un problema enorme. En el café pasa lo mismo.
-
-Para que tu Demo no parezca "plana" o "tibia", tenés que explicar que el modelo está operando en la zona más difícil de la curva.
-
-Casi todos los cafés del dataset son "buenos".
-
-Diferenciar "lo bueno" de "lo muy bueno" requiere una precisión quirúrgica que, sin datos de laboratorio (química del suelo, grados Brix del fruto), es casi imposible de obtener.
+Tras la consolidación del dataset, el proyecto avanzará hacia la implementación de inteligencia artificial para resolver dos necesidades de negocio: la predicción de calidad y la personalización de la oferta.
