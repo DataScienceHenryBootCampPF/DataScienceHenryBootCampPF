@@ -82,28 +82,6 @@ Otros puntos importantes:
 
  - El análisis de nulos reveló una criticidad extrema en Lot.Number (79% de faltantes), justificando su descarte inmediato. Para el resto de las variables con nulos moderados (12% al 20%), como la altitud y variedades, se optó por una estrategia de imputación jerárquica para preservar la integridad del volumen de datos (1339 muestras) sin introducir sesgos significativos.
 
- --- Columnas con Valores Faltantes ---
-                      Cantidad  Porcentaje (%)
-Lot.Number                1063           79.39
-Farm.Name                  359           26.81
-Mill                       318           23.75
-Color                      270           20.16
-Producer                   232           17.33
-altitude_high_meters       230           17.18
-altitude_low_meters        230           17.18
-altitude_mean_meters       230           17.18
-Altitude                   226           16.88
-Variety                    226           16.88
-Company                    209           15.61
-Processing.Method          170           12.70
-ICO.Number                 159           11.87
-Region                      59            4.41
-Harvest.Year                47            3.51
-Owner.1                      7            0.52
-Owner                        7            0.52
-Country.of.Origin            1            0.07
-Quakers                      1            0.07
-
 B. Metodología de Data Preprocessing
 
 Para transformar un archivo crudo de 1339 registros y 44 columnas en una matriz apta para Machine Learning, se aplicó un pipeline de limpieza bajo un enfoque de integridad estadística:
