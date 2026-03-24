@@ -157,7 +157,7 @@ Ofrece recomendaciones personalizadas basadas en perfiles de preferencia.
 ## 🏆 Resultados Principales
 
 1. **Predicción de Calidad**: Modelos XGBoost y CatBoost logran RMSE < 2.5 puntos
-2. **Segmentación de Mercado**: 5 clusters bien definidos con perfiles sensoriales distintos
+2. **Segmentación de Mercado**: 3 clusters bien definidos con perfiles sensoriales distintos
 3. **Insights de Negocio**: La altitud no es el factor determinante; el procesamiento humano es clave
 4. **Recomendación Personalizada**: Sistema capaz de sugerir cafés según preferencias individuales
 
