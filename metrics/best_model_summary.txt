@@ -1,0 +1,9 @@
+RESUMEN DEL MEJOR MODELO OPTIMIZADO
+========================================
+Model            SVR
+MAE         1.395809
+RMSE        1.855811
+R2          0.285788
+MAPE        0.017144
+Time_sec     0.07879
+Name: 1, dtype: object
