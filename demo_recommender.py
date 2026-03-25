@@ -1,58 +1,75 @@
-from src.recommender.recommender_engine import recomendar_por_perfil
 import pandas as pd
+import os
 
 def ejecutar_demo():
     print("\n☕ BIENVENIDO AL BUSCADOR DE CAFÉS PREMIUM ☕")
-    print("-" * 55) # Un poco más ancho para la nueva columna
+    print("-" * 55) 
     
     try:
-        df = pd.read_csv('./models/recommender/coffee_flavor_segments.csv')
-        perfiles = list(df['Perfil_Nombre'].unique())
+        csv_path = './models/recommender/coffee_flavor_segments.csv'
+        if not os.path.exists(csv_path):
+            print("❌ Error: No existe el archivo de segmentos. Ejecuta el Profiler primero.")
+            return
+
+        df = pd.read_csv(csv_path)
+        perfiles = sorted(list(df['Perfil_Nombre'].unique()))
         
-        print("Perfiles disponibles para elegir:")
+        # 1. Selección de Perfil
+        print("Paso 1: Selecciona un perfil de sabor:")
         for i, p in enumerate(perfiles, 1):
-            print(f"{i}. {p}")
+            print(f"  {i}. {p}")
             
-        print("-" * 55)
-        seleccion = input("Selecciona el NÚMERO del perfil que te interesa: ")
+        sel_perfil = input("\nNúmero del perfil: ")
 
-        if seleccion.isdigit():
-            indice = int(seleccion) - 1
+        if sel_perfil.isdigit() and 0 < int(sel_perfil) <= len(perfiles):
+            perfil_buscado = perfiles[int(sel_perfil) - 1]
             
-            if 0 <= indice < len(perfiles):
-                perfil_buscado = perfiles[indice]
-                print(f"\n🔍 Buscando los mejores cafés con perfil '{perfil_buscado}'...")
-                
-                resultados = recomendar_por_perfil(perfil_buscado)
+            # Filtramos países para ese perfil
+            df_perfil = df[df['Perfil_Nombre'] == perfil_buscado]
+            paises = sorted(df_perfil['Country.of.Origin'].unique())
 
-                if isinstance(resultados, str):
-                    print(resultados)
+            # 2. Selección de País
+            print(f"\n🌍 Paso 2: Selecciona un país con perfil '{perfil_buscado}':")
+            for i, pais in enumerate(paises, 1):
+                print(f"  {i}. {pais}")
+            print(f"  {len(paises) + 1}. VER TODOS LOS PAÍSES")
+            
+            sel_pais = input("\nNúmero del país: ")
+
+            # 3. Lógica de Filtrado
+            resultados = df_perfil.copy()
+            if sel_pais.isdigit():
+                idx_pais = int(sel_pais) - 1
+                if 0 <= idx_pais < len(paises):
+                    pais_elegido = paises[idx_pais]
+                    resultados = resultados[resultados['Country.of.Origin'] == pais_elegido]
+                    print(f"\n🔍 Buscando los mejores de {pais_elegido}...")
+                elif idx_pais == len(paises):
+                    print(f"\n🔍 Mostrando resultados globales para '{perfil_buscado}'...")
                 else:
-                    # AJUSTE AQUÍ: Incluimos 'Categoria_Calidad' en el filtrado
-                    final_top = (resultados
-                                 .drop_duplicates(subset=['Nombre_Comercial'])
-                                 [['Nombre_Comercial', 'Total.Cup.Points', 'Categoria_Calidad']] # <--- Agregada
-                                 .head(5))
-
-                    print(f"\n TOP 5 MARCAS ÚNICAS EN '{perfil_buscado}':")
-                    
-                    display_df = final_top.reset_index(drop=True)
-                    display_df.index = display_df.index + 1
-                    
-                    # AJUSTE AQUÍ: Renombramos las 3 columnas
-                    display_df.columns = ['Marca', 'Puntaje', 'Categoría']
-                    
-                    print(display_df)
-                    print("\n💡 Nota: La categoría 'Premium' se asigna a puntajes >= 82.5 (Mediana).")
+                    print("⚠️ Número no válido. Mostrando todos.")
+            
+            if resultados.empty:
+                print("❌ No se encontraron resultados.")
             else:
-                print(f"Error: El número {seleccion} no está en la lista.")
-        else:
-            print("Error: Por favor, ingresa solo el número (ej: 1).")
+                final_top = (resultados
+                             .sort_values(by='Total.Cup.Points', ascending=False)
+                             .drop_duplicates(subset=['Nombre_Comercial'])
+                             [['Nombre_Comercial', 'Total.Cup.Points', 'Categoria_Calidad']]
+                             .head(5))
 
-    except FileNotFoundError:
-        print("Error: No se encontró el archivo de las recomendaciones.")
+                print(f"\n🏆 TOP 5 CAFÉS RECOMENDADOS:")
+                display_df = final_top.reset_index(drop=True)
+                display_df.index = display_df.index + 1
+                display_df.columns = ['Marca', 'Puntaje', 'Categoría']
+                
+                print(display_df.to_string())
+                print(f"💡 Perfil sensorial seleccionado: {perfil_buscado}")
+        else:
+            print("❌ Selección de perfil no válida.")
+
     except Exception as e:
-        print(f"Ocurrió un error inesperado: {e}")
+        print(f"❌ Ocurrió un error: {e}")
 
 if __name__ == "__main__":
     ejecutar_demo()
