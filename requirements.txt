@@ -10,3 +10,4 @@ imbalanced-learn
 ipykernel
 xgboost
 catboost
+mlflow
