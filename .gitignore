@@ -21,3 +21,8 @@ mlartifacts/
 
 # Excepción para GitHub Actions
 !.github/
+
+# MLflow (Para que no se suban los experimentos locales)
+mlruns/
+mlartifacts/
+mlflow.db
