@@ -10,7 +10,7 @@ from datetime import datetime
 import sys
 
 # Agregar el directorio src al path para importar módulos
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 from predictor.recommendation_system import HybridCoffeeRecommendationSystem
 
 # Configuración de la página
