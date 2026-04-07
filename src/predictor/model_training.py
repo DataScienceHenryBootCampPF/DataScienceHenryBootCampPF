@@ -4,6 +4,8 @@ import joblib
 import os
 import time
 import warnings
+import mlflow
+import mlflow.sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
@@ -24,6 +26,7 @@ METRICS_DIR = './metrics'
 os.makedirs(MODELS_DIR, exist_ok=True)
 os.makedirs(METRICS_DIR, exist_ok=True)
 
+mlflow.set_experiment("DataMark_Coffee_Prediction")
 
 df = pd.read_csv('./data/processed/coffee_data_for_training.csv')
 df = df[(df['Total.Cup.Points'] > 70) & (df['Total.Cup.Points'] < 92)]
@@ -64,41 +67,62 @@ models = {
 results = []
 
 for name, model in models.items():
-    start_time = time.time()
-    
-    pipeline = Pipeline(steps=[
-        ('preprocessor', preprocessor),
-        ('regressor', model)
-    ])
-    
-    pipeline.fit(X_train, y_train)
-    y_pred = pipeline.predict(X_test)
-    
-    mae = mean_absolute_error(y_test, y_pred)
-    mse = mean_squared_error(y_test, y_pred)
-    rmse = np.sqrt(mse)
-    r2 = r2_score(y_test, y_pred)
-    mape = mean_absolute_percentage_error(y_test, y_pred)
-    duration = time.time() - start_time
-    
-    results.append({
-        'Model': name, 
-        'MAE': mae, 
-        'RMSE': rmse, 
-        'R2': r2, 
-        'MAPE': mape,
-        'Time_sec': duration
-    })
-    
-    joblib.dump(pipeline, os.path.join(MODELS_DIR, f'coffee_model_{name}.pkl'))
-    print(f"✅ {name:<18} | MAE: {mae:.3f} | R2: {r2:.3f}")
+    with mlflow.start_run(run_name=name):
+        start_time = time.time()
+        
+        pipeline = Pipeline(steps=[
+            ('preprocessor', preprocessor),
+            ('regressor', model)
+        ])
+        
+        pipeline.fit(X_train, y_train)
+        y_pred = pipeline.predict(X_test)
+        
+
+        mae = mean_absolute_error(y_test, y_pred)
+        mse = mean_squared_error(y_test, y_pred)
+        rmse = np.sqrt(mse)
+        r2 = r2_score(y_test, y_pred)
+        mape = mean_absolute_percentage_error(y_test, y_pred)
+        duration = time.time() - start_time
+        
+
+        if hasattr(model, 'get_params'):
+            params = model.get_params()
+
+            simple_params = {k: v for k, v in params.items() if isinstance(v, (int, float, str, bool))}
+            mlflow.log_params(simple_params)
+        
+
+        mlflow.log_metric("MAE", mae)
+        mlflow.log_metric("RMSE", rmse)
+        mlflow.log_metric("R2", r2)
+        mlflow.log_metric("MAPE", mape)
+        mlflow.log_metric("Duration_Sec", duration)
+        
+
+        mlflow.sklearn.log_model(pipeline, f"model_{name}")
+        
+
+        results.append({
+            'Model': name, 
+            'MAE': mae, 
+            'RMSE': rmse, 
+            'R2': r2, 
+            'MAPE': mape,
+            'Time_sec': duration
+        })
+        
+        joblib.dump(pipeline, os.path.join(MODELS_DIR, f'coffee_model_{name}.pkl'))
+        print(f"✅ {name:<18} | MAE: {mae:.3f} | R2: {r2:.3f} | MLflow: Logged")
 
 df_results = pd.DataFrame(results).sort_values(by='MAE')
 df_results.to_csv(os.path.join(METRICS_DIR, 'model_comparison_ranking.csv'), index=False)
 
 with open(os.path.join(METRICS_DIR, 'best_model_summary.txt'), 'w') as f:
-    f.write("RESUMEN DEL MEJOR MODELO OPTIMIZADO\n")
-    f.write("="*40 + "\n")
+    f.write("RESUMEN DEL MEJOR MODELO OPTIMIZADO - DATAMARK\n")
+    f.write("="*45 + "\n")
     f.write(str(df_results.iloc[0]))
 
 print(f"\n🏆 Ganador por MAE: {df_results.iloc[0]['Model']}")
+print(f"🚀 Ejecutá 'mlflow ui' en tu terminal para ver el dashboard interactivo.")
