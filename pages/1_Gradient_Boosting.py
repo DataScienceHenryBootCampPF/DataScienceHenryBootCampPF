@@ -807,7 +807,7 @@ elif page == "ℹ️ Información":
     ## 📊 Modelo Predictivo
     
     El sistema utiliza el mejor modelo entrenado con las siguientes características:
-    - **Algoritmo**: {model_type if 'model_type' in locals() else 'Variados (selecciona el mejor)'}
+    - **Algoritmo**: {model_type}
     - **Métricas**: RMSE, R², precisión estimada
     - **Features**: Múltiples características sensoriales y de origen
     
