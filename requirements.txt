@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 pandas==2.3.3
 numpy==2.3.4
 matplotlib==3.10.5
@@ -10,3 +11,18 @@ imbalanced-learn==0.14.0
 ipykernel==6.30.0
 streamlit==1.55.0
 plotly==6.5.0
+=======
+pandas
+numpy
+matplotlib
+seaborn
+scikit-learn
+nbformat
+joblib
+scipy
+imbalanced-learn
+ipykernel
+xgboost
+catboost
+mlflow
+>>>>>>> development
