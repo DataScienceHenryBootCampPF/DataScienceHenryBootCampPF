@@ -4,369 +4,593 @@ import numpy as np
 import joblib
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import os
+from datetime import datetime
+import sys
 
-# ──────────────────────────────────────────────
-# Configuración de página
-# ──────────────────────────────────────────────
+# Agregar el directorio src al path para importar módulos
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+from predictor.recommendation_system import HybridCoffeeRecommendationSystem
+
+# Configuración de la página
 st.set_page_config(
-    page_title="☕ Random Forest – Coffee Quality",
+    page_title="🌲 Random Forest - Coffee Quality",
     page_icon="🌲",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-st.title("🌲 Coffee Quality Predictor — Random Forest")
-st.markdown("*Modelo: RandomForestRegressor Optimizado | Proyecto Henry Data Science*")
+# Título y descripción
+st.title("🌲 Random Forest Coffee Quality Predictor")
+st.markdown("""
+*Modelo específico Random Forest para predecir la calidad del café*
+""")
 
-# ──────────────────────────────────────────────
-# Carga de modelo y preprocessor
-# ──────────────────────────────────────────────
+# Cargar modelos y datos
 @st.cache_resource
-def load_assets():
+def load_random_forest_model():
+    """Carga el modelo Random Forest específico"""
     try:
-        model        = joblib.load("models/prediction/all_models/RandomForest_Optimized.pkl")
-        preprocessor = joblib.load("models/prediction/preprocessor.pkl")
-        metadata     = joblib.load("models/prediction/training_metadata.pkl")
-        return model, preprocessor, metadata
+        model_path        = "models/prediction/coffee_model_RandomForest.pkl"
+        preprocessor_path = "models/prediction/preprocessor.pkl"
+        metadata_path     = "models/prediction/training_metadata.pkl"
+
+        model        = joblib.load(model_path)
+        preprocessor = joblib.load(preprocessor_path) if os.path.exists(preprocessor_path) else None
+        metadata     = joblib.load(metadata_path)     if os.path.exists(metadata_path)     else None
+
+        # Si el modelo es un Pipeline, extraer el estimador final (el RF)
+        from sklearn.pipeline import Pipeline
+        if isinstance(model, Pipeline):
+            rf_model = model[-1]
+            # Si el pipeline ya incluye el preprocessor, no necesitamos el externo
+            if preprocessor is None:
+                preprocessor = model[:-1]
+        else:
+            rf_model = model
+
+        return rf_model, preprocessor, metadata
     except Exception as e:
-        st.error(f"Error cargando modelos: {e}")
+        st.error(f"Error al cargar el modelo Random Forest: {e}")
         return None, None, None
 
-model, preprocessor, metadata = load_assets()
+@st.cache_resource
+def load_recommender():
+    """Carga el sistema de recomendación"""
+    try:
+        return HybridCoffeeRecommendationSystem()
+    except Exception as e:
+        st.error(f"Error al cargar el sistema de recomendación: {e}")
+        return None
 
-# ──────────────────────────────────────────────
-# Sidebar – navegación
-# ──────────────────────────────────────────────
+# Cargar modelos
+model, preprocessor, metadata = load_random_forest_model()
+recommender = load_recommender()
+
+# Sidebar para navegación
 st.sidebar.title("📋 Navegación")
 page = st.sidebar.selectbox(
-    "Sección:",
-    ["🎯 Predicción", "📊 Métricas del Modelo", "🔍 Importancia de Features"]
+    "Selecciona una funcionalidad:",
+    ["🎯 Predicción de Calidad", "🔍 Sistema de Recomendación", "📊 Análisis del Modelo", "ℹ️ Información"]
 )
 
-# ──────────────────────────────────────────────
-# Función de predicción
-# ──────────────────────────────────────────────
-def predict(input_data: dict):
-    df = pd.DataFrame([input_data])
-    X  = preprocessor.transform(df)
-    pred = model.predict(X)[0]
-
-    # Estimación de intervalo usando std de los árboles
-    tree_preds = np.array([tree.predict(X)[0] for tree in model.estimators_])
-    std = tree_preds.std()
-
-    category, color = (
-        ("Excelente 🏆", "#2ecc71")  if pred >= 85 else
-        ("Muy Bueno ✅", "#3498db")  if pred >= 80 else
-        ("Bueno ☕",     "#f39c12")  if pred >= 75 else
-        ("Regular ⚠️",  "#e74c3c")
-    )
-
-    return {
-        "score":    round(float(pred), 2),
-        "lower":    round(max(0,   float(pred - 1.96 * std)), 2),
-        "upper":    round(min(100, float(pred + 1.96 * std)), 2),
-        "std":      round(float(std), 3),
-        "category": category,
-        "color":    color,
-    }
-
+# Función para construir el input
 def build_input(aroma, flavor, aftertaste, acidity, body, balance,
                 species, country, altitude, moisture, defects1, defects2):
     sensory = [aroma, flavor, aftertaste, acidity, body, balance]
     alt_cat = (
-        "Baja"      if altitude < 1000 else
+        "Baja"       if altitude < 1000 else
         "Media-Baja" if altitude < 1400 else
         "Media"      if altitude < 1600 else
-        "Media-Alta" if altitude < 2000 else
-        "Alta"
+        "Alta"       if altitude < 2000 else
+        "Muy-Alta"
     )
     moist_cat = (
-        "Baja"     if moisture < 0.08 else
-        "Óptima"   if moisture <= 0.12 else
+        "Baja"      if moisture < 0.08 else
+        "Óptima"    if moisture <= 0.12 else
         "Aceptable" if moisture <= 0.15 else
         "Alta"
     )
     return {
-        "Species":                  species,
-        "Aroma":                    aroma,
-        "Flavor":                   flavor,
-        "Aftertaste":               aftertaste,
-        "Acidity":                  acidity,
-        "Body":                     body,
-        "Balance":                  balance,
-        "Country.of.Origin":        country,
-        "altitude_mean_meters":     altitude,
-        "Moisture":                 moisture,
-        "Category.One.Defects":     defects1,
-        "Category.Two.Defects":     defects2,
-        "Number.of.Bags":           300,
-        "Cupper.Points":            8.0,
-        "Variety":                  "Other",
-        "Processing.Method":        "Washed / Wet",
-        "Color":                    "Green",
-        "Owner":                    "Desconocido",
-        "Region":                   "Other",
-        "altitude_category":        alt_cat,
-        "altitude_std":             0.0,
-        "sensory_avg":              np.mean(sensory),
-        "sensory_std":              float(np.std(sensory)),
-        "best_sensory":             max(sensory),
-        "total_defects":            defects1 + defects2,
-        "no_defects":               int(defects1 == 0 and defects2 == 0),
-        "moisture_category":        moist_cat,
-        "processing_simple":        "Washed",
+        "Species":               species,
+        "Aroma":                 aroma,
+        "Flavor":                flavor,
+        "Aftertaste":            aftertaste,
+        "Acidity":               acidity,
+        "Body":                  body,
+        "Balance":               balance,
+        "Country.of.Origin":     country,
+        "altitude_mean_meters":  altitude,
+        "Moisture":              moisture,
+        "Category.One.Defects":  defects1,
+        "Category.Two.Defects":  defects2,
+        "Number.of.Bags":        300,
+        "Cupper.Points":         8.0,
+        "Variety":               "Other",
+        "Processing.Method":     "Washed / Wet",
+        "Color":                 "Green",
+        "Owner":                 "Unknown Farm",
+        "Region":                "Other",
+        "altitude_category":     alt_cat,
+        "altitude_std":          0.0,
+        "sensory_avg":           float(np.mean(sensory)),
+        "sensory_std":           float(np.std(sensory)),
+        "best_sensory":          max(sensory),
+        "total_defects":         defects1 + defects2,
+        "no_defects":            int(defects1 == 0 and defects2 == 0),
+        "moisture_category":     moist_cat,
+        "processing_simple":     "Washed",
     }
 
-# ══════════════════════════════════════════════
-# PÁGINA 1 — Predicción
-# ══════════════════════════════════════════════
-if page == "🎯 Predicción":
-    st.header("🎯 Predecí la calidad de tu café")
+# Función para predecir calidad
+def predict_quality(input_data):
+    """Realiza la predicción de calidad del café con Random Forest"""
+    try:
+        df = pd.DataFrame([input_data])
 
-    if model is None:
-        st.error("No se pudo cargar el modelo.")
-        st.stop()
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.subheader("Características sensoriales")
-        aroma      = st.slider("Aroma",      0.0, 10.0, 8.0, 0.1)
-        flavor     = st.slider("Sabor",      0.0, 10.0, 8.2, 0.1)
-        aftertaste = st.slider("Posgusto",   0.0, 10.0, 8.1, 0.1)
-        acidity    = st.slider("Acidez",     0.0, 10.0, 8.0, 0.1)
-        body       = st.slider("Cuerpo",     0.0, 10.0, 8.3, 0.1)
-        balance    = st.slider("Balance",    0.0, 10.0, 8.2, 0.1)
-
-    with col2:
-        st.subheader("Origen y condiciones")
-        species   = st.selectbox("Especie", ["Arabica", "Robusta"])
-        country   = st.selectbox("País de origen", [
-            "Colombia", "Ethiopia", "Kenya", "Brazil", "Vietnam",
-            "Guatemala", "Costa Rica", "Peru", "Honduras", "Mexico",
-            "Tanzania, United Republic Of", "Uganda", "Indonesia"
-        ])
-        altitude  = st.number_input("Altitud (metros)", 0, 3000, 1500)
-        moisture  = st.number_input("Humedad", 0.0, 0.5, 0.12, 0.01, format="%.2f")
-        defects1  = st.number_input("Defectos Categoría 1", 0, 10, 0)
-        defects2  = st.number_input("Defectos Categoría 2", 0, 20, 1)
-
-    if st.button("🔮 Predecir calidad", type="primary", use_container_width=True):
-        input_data = build_input(
-            aroma, flavor, aftertaste, acidity, body, balance,
-            species, country, altitude, moisture, defects1, defects2
-        )
-        res = predict(input_data)
-
-        st.success("¡Predicción completada!")
-        st.markdown("---")
-
-        m1, m2, m3 = st.columns(3)
-        m1.metric("Puntuación estimada", f"{res['score']} / 100")
-        m2.metric("Intervalo 95%", f"{res['lower']} – {res['upper']}")
-        m3.metric("Categoría", res["category"])
-
-        # Gauge
-        fig_gauge = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=res["score"],
-            title={"text": "Calidad del Café"},
-            gauge={
-                "axis": {"range": [0, 100]},
-                "bar":  {"color": res["color"]},
-                "steps": [
-                    {"range": [0,  75], "color": "#f8f9fa"},
-                    {"range": [75, 80], "color": "#fff3cd"},
-                    {"range": [80, 85], "color": "#cce5ff"},
-                    {"range": [85,100], "color": "#d4edda"},
-                ],
-                "threshold": {
-                    "line": {"color": "red", "width": 3},
-                    "thickness": 0.75,
-                    "value": 90
-                }
-            }
-        ))
-        fig_gauge.update_layout(height=350)
-        st.plotly_chart(fig_gauge, use_container_width=True)
-
-        # Radar sensorial
-        cats   = ["Aroma", "Sabor", "Posgusto", "Acidez", "Cuerpo", "Balance"]
-        vals   = [aroma, flavor, aftertaste, acidity, body, balance]
-        fig_r  = go.Figure(go.Scatterpolar(
-            r=vals + [vals[0]],
-            theta=cats + [cats[0]],
-            fill="toself",
-            line_color=res["color"],
-            name="Perfil sensorial"
-        ))
-        fig_r.update_layout(
-            polar=dict(radialaxis=dict(visible=True, range=[0, 10])),
-            title="Perfil Sensorial del Café",
-            height=400
-        )
-        st.plotly_chart(fig_r, use_container_width=True)
-
-        # Interpretación
-        st.subheader("📋 Interpretación")
-        if res["score"] >= 85:
-            st.success("🏆 **Café de Especialidad** — Apto para mercado premium.")
-        elif res["score"] >= 80:
-            st.info("✅ **Alta Calidad** — Muy bueno para el mercado especial.")
-        elif res["score"] >= 75:
-            st.warning("☕ **Buena Calidad** — Adecuado para consumo general.")
+        if preprocessor is not None:
+            processed_data = preprocessor.transform(df)
         else:
-            st.error("⚠️ **Calidad Regular** — Requiere mejoras.")
+            processed_data = df
 
-# ══════════════════════════════════════════════
-# PÁGINA 2 — Métricas del Modelo
-# ══════════════════════════════════════════════
-elif page == "📊 Métricas del Modelo":
-    st.header("📊 Métricas y Validación — Random Forest Optimizado")
+        prediction = model.predict(processed_data)[0]
 
-    if model is None:
-        st.error("No se pudo cargar el modelo.")
-        st.stop()
+        # Intervalo de confianza usando la dispersión entre árboles
+        tree_preds = np.array([tree.predict(processed_data)[0] for tree in model.estimators_])
+        std = tree_preds.std()
 
-    # ── Info del modelo ──
-    st.subheader("🌲 ¿Por qué Random Forest?")
-    st.markdown("""
-    **Random Forest** es un modelo de *ensemble* que entrena múltiples árboles de decisión
-    y promedia sus predicciones. Sus ventajas para este problema son:
+        lower_bound = round(max(0,   float(prediction - 1.96 * std)), 2)
+        upper_bound = round(min(100, float(prediction + 1.96 * std)), 2)
 
-    - **Robusto a outliers**: el café tiene productores muy distintos; RF maneja bien esa varianza.
-    - **No lineal**: la calidad del café no depende linealmente de sus características.
-    - **Interpretable**: a través de la importancia de features podemos explicar qué factores importan más.
-    - **Optimizado**: esta versión fue tuneada con hiperparámetros para mejorar performance.
-    """)
+        if prediction >= 85:
+            quality_category = "Excelente"
+            color = "🟢"
+        elif prediction >= 80:
+            quality_category = "Muy Bueno"
+            color = "🔵"
+        elif prediction >= 75:
+            quality_category = "Bueno"
+            color = "🟡"
+        else:
+            quality_category = "Regular"
+            color = "🟠"
 
-    # ── Métricas ──
-    st.subheader("📈 Métricas de Evaluación")
+        rmse = metadata.get('best_rmse', std) if metadata else std
 
-    # Cargamos analysis_summary para mostrar comparación
-    try:
-        summary_df = pd.read_csv("models/prediction/analysis_summary.csv")
-        rf_row = summary_df[summary_df.apply(
-            lambda r: "Random" in str(r.values), axis=1
-        )]
-    except Exception:
-        rf_row = pd.DataFrame()
+        return {
+            'predicted_score':      round(float(prediction), 2),
+            'quality_category':     quality_category,
+            'color':                color,
+            'confidence_interval':  {'lower': lower_bound, 'upper': upper_bound},
+            'model_rmse':           round(float(rmse), 3),
+            'accuracy_estimate':    f"{(1 - float(rmse)/100)*100:.1f}%",
+            'std':                  round(float(std), 3),
+        }
 
-    # Métricas del RF desde el modelo mismo
-    n_estimators = model.n_estimators
-    max_depth    = model.max_depth
-
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Modelo", "RandomForest")
-    c2.metric("Árboles", n_estimators)
-    c3.metric("Max Depth", str(max_depth) if max_depth else "Sin límite")
-    c4.metric("Features usadas", model.n_features_in_)
-
-    # ── Comparación con otros modelos ──
-    st.subheader("🏆 Comparación con otros modelos")
-
-    try:
-        comparison_df = pd.read_csv("models/prediction/training_results.csv")
-        st.dataframe(comparison_df.round(4), use_container_width=True)
-
-        # Gráfico de barras comparativo
-        if "RMSE" in comparison_df.columns and "Model" in comparison_df.columns:
-            fig_comp = px.bar(
-                comparison_df.sort_values("RMSE"),
-                x="Model", y="RMSE",
-                color="RMSE",
-                color_continuous_scale="RdYlGn_r",
-                title="RMSE por modelo (menor es mejor)",
-            )
-            fig_comp.update_layout(height=400)
-            st.plotly_chart(fig_comp, use_container_width=True)
     except Exception as e:
-        st.info(f"No se pudo cargar la comparación de modelos: {e}")
-
-    # ── Plan de validación ──
-    st.subheader("📋 Plan de Validación")
-    st.markdown("""
-    | Paso | Detalle |
-    |------|---------|
-    | **División de datos** | Train 80% / Test 20%, con `random_state` fijo para reproducibilidad |
-    | **Métricas principales** | RMSE (error cuadrático medio) y R² (varianza explicada) |
-    | **Cross-validation** | K-Fold (k=5) para estimación más robusta del error |
-    | **Optimización** | GridSearch / RandomSearch sobre hiperparámetros clave |
-    | **Justificación del modelo** | Seleccionado por menor RMSE en conjunto de validación |
-    | **Reproducibilidad** | Pipeline guardado con `joblib`; preprocessor y modelo versionados |
-    """)
+        st.error(f"Error en la predicción: {e}")
+        return None
 
 # ══════════════════════════════════════════════
-# PÁGINA 3 — Importancia de Features
+# PÁGINA 1 — Predicción de Calidad
 # ══════════════════════════════════════════════
-elif page == "🔍 Importancia de Features":
-    st.header("🔍 ¿Qué factores definen la calidad del café?")
+if page == "🎯 Predicción de Calidad":
+    st.header("🎯 Predicción de Calidad - Random Forest")
 
     if model is None:
-        st.error("No se pudo cargar el modelo.")
-        st.stop()
+        st.error("❌ No se pudo cargar el modelo Random Forest. Por favor, verifica que los archivos del modelo existan.")
+    else:
+        st.info(f"""
+        **Modelo:** Random Forest Optimizado  
+        **Tipo:** {type(model).__name__}  
+        **Árboles:** {model.n_estimators}  
+        **Profundidad máxima:** {model.max_depth if model.max_depth else 'Sin límite'}
+        """)
 
-    # Feature importances del RF
-    importances = model.feature_importances_
+        tab1, tab2 = st.tabs(["📝 Entrada Manual", "🎲 Ejemplos Predefinidos"])
 
-    try:
-        feature_names = preprocessor.get_feature_names_out()
-    except Exception:
-        feature_names = [f"feature_{i}" for i in range(len(importances))]
+        with tab1:
+            st.subheader("📝 Entrada Manual de Datos")
 
-    fi_df = pd.DataFrame({
-        "feature":    feature_names,
-        "importance": importances
-    }).sort_values("importance", ascending=False)
+            col1, col2 = st.columns(2)
 
-    # Limpiar prefijos num__ / cat__
-    fi_df["feature_clean"] = (
-        fi_df["feature"]
-        .str.replace("num__", "", regex=False)
-        .str.replace("cat__", "", regex=False)
-    )
+            with col1:
+                st.write("**Características Sensoriales**")
+                aroma      = st.slider("Aroma",    0.0, 10.0, 8.0, 0.1)
+                flavor     = st.slider("Sabor",    0.0, 10.0, 8.2, 0.1)
+                aftertaste = st.slider("Posgusto", 0.0, 10.0, 8.1, 0.1)
+                acidity    = st.slider("Acidez",   0.0, 10.0, 8.0, 0.1)
+                body       = st.slider("Cuerpo",   0.0, 10.0, 8.3, 0.1)
+                balance    = st.slider("Balance",  0.0, 10.0, 8.2, 0.1)
 
-    # Top 15
-    top15 = fi_df.head(15)
+            with col2:
+                st.write("**Características de Origen**")
+                species  = st.selectbox("Especie", ["Arabica", "Robusta"])
+                country  = st.selectbox("País de Origen", [
+                    "Colombia", "Ethiopia", "Kenya", "Brazil", "Vietnam",
+                    "Guatemala", "Costa Rica", "Peru", "Honduras", "Mexico",
+                    "Tanzania, United Republic Of", "Uganda", "Indonesia"
+                ])
+                altitude  = st.number_input("Altitud (metros)", 0, 3000, 1500)
+                moisture  = st.number_input("Humedad (%)", 0.0, 0.5, 0.12, 0.01)
 
-    fig_fi = px.bar(
-        top15,
-        x="importance",
-        y="feature_clean",
-        orientation="h",
-        color="importance",
-        color_continuous_scale="Greens",
-        title="Top 15 características más importantes para predecir calidad",
-        labels={"importance": "Importancia", "feature_clean": "Característica"}
-    )
-    fig_fi.update_layout(height=500, yaxis=dict(autorange="reversed"))
-    st.plotly_chart(fig_fi, use_container_width=True)
+                st.write("**Defectos**")
+                defects1 = st.number_input("Defectos Categoría 1", 0, 10, 0)
+                defects2 = st.number_input("Defectos Categoría 2", 0, 20, 1)
 
-    # Tabla completa colapsada
-    with st.expander("Ver tabla completa de importancias"):
-        st.dataframe(
-            fi_df[["feature_clean", "importance"]].rename(
-                columns={"feature_clean": "Feature", "importance": "Importancia"}
-            ).round(5),
-            use_container_width=True
-        )
+            if st.button("🔮 Predecir Calidad", type="primary"):
+                input_data = build_input(
+                    aroma, flavor, aftertaste, acidity, body, balance,
+                    species, country, altitude, moisture, defects1, defects2
+                )
+                results = predict_quality(input_data)
 
-    # Insight automático
-    top3 = top15["feature_clean"].tolist()[:3]
-    st.subheader("💡 Insight")
-    st.info(
-        f"Las 3 características que **más influyen** en la predicción son: "
-        f"**{top3[0]}**, **{top3[1]}** y **{top3[2]}**. "
-        f"Esto confirma que las características sensoriales del café son el principal "
-        f"determinante de su calidad final."
-    )
+                if results:
+                    st.success("✅ Predicción realizada con éxito!")
 
-# ── Footer ──
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric(
+                            label="Puntuación Predicha",
+                            value=f"{results['predicted_score']}/100",
+                            delta=f"{results['color']} {results['quality_category']}"
+                        )
+                    with col2:
+                        st.metric(
+                            label="Intervalo de Confianza (95%)",
+                            value=f"{results['confidence_interval']['lower']} - {results['confidence_interval']['upper']}"
+                        )
+                    with col3:
+                        st.metric(
+                            label="Precisión Estimada",
+                            value=results['accuracy_estimate']
+                        )
+
+                    # Gauge
+                    fig = go.Figure(go.Indicator(
+                        mode="gauge+number+delta",
+                        value=results['predicted_score'],
+                        domain={'x': [0, 1], 'y': [0, 1]},
+                        title={'text': "Calidad del Café"},
+                        delta={'reference': 80},
+                        gauge={
+                            'axis': {'range': [None, 100]},
+                            'bar':  {'color': "darkgreen"},
+                            'steps': [
+                                {'range': [0,  75], 'color': "lightgray"},
+                                {'range': [75, 80], 'color': "yellow"},
+                                {'range': [80, 85], 'color': "lightblue"},
+                                {'range': [85,100], 'color': "lightgreen"},
+                            ],
+                            'threshold': {
+                                'line': {'color': "red", 'width': 4},
+                                'thickness': 0.75,
+                                'value': 90
+                            }
+                        }
+                    ))
+                    fig.update_layout(height=400)
+                    st.plotly_chart(fig, use_container_width=True)
+
+                    st.subheader("📋 Interpretación de Resultados")
+                    if results['predicted_score'] >= 85:
+                        st.success("🏆 **Café de Especialidad** - Excelente para el mercado premium")
+                    elif results['predicted_score'] >= 80:
+                        st.info("✅ **Café de Alta Calidad** - Muy bueno para el mercado especial")
+                    elif results['predicted_score'] >= 75:
+                        st.warning("☕ **Café de Buena Calidad** - Adecuado para consumo general")
+                    else:
+                        st.error("⚠️ **Café de Calidad Regular** - Podría necesitar mejoras")
+
+        with tab2:
+            st.subheader("🎲 Ejemplos Predefinidos")
+
+            sample_coffees = [
+                {
+                    "name": "Café Especial Etiopía",
+                    "description": "Café de altura, con notas florales y afrutadas",
+                    "data": {
+                        'Species': 'Arabica', 'Aroma': 8.5, 'Flavor': 8.7, 'Aftertaste': 8.6,
+                        'Acidity': 8.8, 'Body': 8.4, 'Balance': 8.5,
+                        'Country.of.Origin': 'Ethiopia', 'altitude_mean_meters': 1800,
+                        'Moisture': 0.11, 'Category.One.Defects': 0, 'Category.Two.Defects': 2,
+                    }
+                },
+                {
+                    "name": "Café Colombiano Premium",
+                    "description": "Café balanceado con notas de chocolate y nuez",
+                    "data": {
+                        'Species': 'Arabica', 'Aroma': 8.2, 'Flavor': 8.4, 'Aftertaste': 8.3,
+                        'Acidity': 8.1, 'Body': 8.5, 'Balance': 8.3,
+                        'Country.of.Origin': 'Colombia', 'altitude_mean_meters': 1600,
+                        'Moisture': 0.12, 'Category.One.Defects': 0, 'Category.Two.Defects': 1,
+                    }
+                },
+                {
+                    "name": "Café Kenia AA",
+                    "description": "Café de altura con acidez brillante y notas cítricas",
+                    "data": {
+                        'Species': 'Arabica', 'Aroma': 8.8, 'Flavor': 8.9, 'Aftertaste': 8.7,
+                        'Acidity': 9.0, 'Body': 8.3, 'Balance': 8.6,
+                        'Country.of.Origin': 'Kenya', 'altitude_mean_meters': 2000,
+                        'Moisture': 0.10, 'Category.One.Defects': 0, 'Category.Two.Defects': 0,
+                    }
+                }
+            ]
+
+            selected_coffee = st.selectbox(
+                "Selecciona un café de ejemplo:",
+                options=range(len(sample_coffees)),
+                format_func=lambda x: f"{sample_coffees[x]['name']} - {sample_coffees[x]['description']}"
+            )
+
+            if st.button("🎯 Analizar Café Seleccionado"):
+                coffee   = sample_coffees[selected_coffee]
+                raw      = coffee['data']
+                full_data = build_input(
+                    raw['Aroma'], raw['Flavor'], raw['Aftertaste'],
+                    raw['Acidity'], raw['Body'], raw['Balance'],
+                    raw['Species'], raw['Country.of.Origin'],
+                    raw['altitude_mean_meters'], raw['Moisture'],
+                    raw['Category.One.Defects'], raw['Category.Two.Defects']
+                )
+
+                results = predict_quality(full_data)
+
+                if results:
+                    st.success(f"✅ Análisis completado para: **{coffee['name']}**")
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Puntuación", f"{results['predicted_score']}/100")
+                        st.metric("Categoría",  f"{results['color']} {results['quality_category']}")
+                    with col2:
+                        st.metric("Precisión",    results['accuracy_estimate'])
+                        st.metric("Std Árboles", f"±{results['std']}")
+
+                    # Radar chart
+                    sensory_features = ['Aroma', 'Flavor', 'Aftertaste', 'Acidity', 'Body', 'Balance']
+                    values = [raw[f] for f in sensory_features]
+
+                    fig = go.Figure(go.Scatterpolar(
+                        r=values + [values[0]],
+                        theta=sensory_features + [sensory_features[0]],
+                        fill='toself',
+                        name=coffee['name']
+                    ))
+                    fig.update_layout(
+                        polar=dict(radialaxis=dict(visible=True, range=[0, 10])),
+                        showlegend=True,
+                        title="Perfil Sensorial"
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+
+# ══════════════════════════════════════════════
+# PÁGINA 2 — Sistema de Recomendación
+# ══════════════════════════════════════════════
+elif page == "🔍 Sistema de Recomendación":
+    st.header("🔍 Sistema de Recomendación de Café")
+
+    if recommender is None:
+        st.error("❌ No se pudo cargar el sistema de recomendación. Por favor, verifica que los datos existan.")
+    else:
+        st.info("""
+        **¿Cómo funciona?**  
+        Ingresa tus preferencias sensoriales y el sistema encontrará cafés similares en la base de datos.
+        Puedes especificar todas las características o solo las que más te importan.
+        """)
+
+        col1, col2 = st.columns([2, 1])
+
+        with col1:
+            st.subheader("🎯 Tu Perfil de Preferencias")
+            flavor     = st.slider("Sabor preferido",    0.0, 10.0, 8.0, 0.1, help="Intensidad del sabor que buscas")
+            aftertaste = st.slider("Posgusto preferido", 0.0, 10.0, 8.0, 0.1, help="Persistencia y calidad del posgusto")
+            aroma      = st.slider("Aroma preferido",    0.0, 10.0, 8.0, 0.1, help="Intensidad y complejidad del aroma")
+            acidity    = st.slider("Acidez preferida",   0.0, 10.0, 8.0, 0.1, help="Brillantez y vivacidad de la acidez")
+            body       = st.slider("Cuerpo preferido",   0.0, 10.0, 8.0, 0.1, help="Peso y textura en boca")
+            balance    = st.slider("Balance preferido",  0.0, 10.0, 8.0, 0.1, help="Equilibrio general entre características")
+
+        with col2:
+            st.subheader("🔍 Filtros Adicionales")
+            species_filter = st.selectbox("Filtrar por especie:", ["Todas", "Arabica", "Robusta"])
+            top_n          = st.slider("Número de recomendaciones:", 5, 50, 10, 5)
+            country_filter = st.selectbox(
+                "Filtrar por país (opcional):",
+                ["Todos"] + ["Colombia", "Ethiopia", "Kenya", "Brazil", "Vietnam",
+                             "Guatemala", "Costa Rica", "Peru"]
+            )
+
+        if st.button("🔍 Obtener Recomendaciones", type="primary"):
+            with st.spinner("🔍 Buscando cafés similares..."):
+                try:
+                    recommendations = recommender.recomendar(
+                        Flavor=flavor,
+                        Aftertaste=aftertaste,
+                        Aroma=aroma,
+                        Acidity=acidity,
+                        Body=body,
+                        Balance=balance,
+                        species=species_filter if species_filter != "Todas" else None,
+                        top_n=top_n
+                    )
+
+                    if recommendations.empty:
+                        st.warning("❌ No se encontraron cafés que coincidan con tus preferencias.")
+                    else:
+                        st.success(f"✅ Se encontraron {len(recommendations)} cafés recomendados!")
+
+                        for i, (_, coffee) in enumerate(recommendations.iterrows(), 1):
+                            with st.expander(f"{i}. {coffee.get('Owner', 'Unknown')} - {coffee['Total.Cup.Points']:.2f} pts"):
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    st.write("**📍 Origen**")
+                                    st.write(f"País: {coffee['Country.of.Origin']}")
+                                    st.write(f"Región: {coffee.get('Region', 'Unknown')}")
+                                    st.write(f"Especie: {coffee['Species']}")
+                                    st.write("**☕ Características**")
+                                    st.write(f"Variedad: {coffee.get('Variety', 'Unknown')}")
+                                    st.write(f"Proceso: {coffee.get('Processing.Method', 'Unknown')}")
+                                with col2:
+                                    st.write("**🎯 Perfil Sensorial**")
+                                    st.metric("Sabor",    f"{coffee['Flavor']:.1f}")
+                                    st.metric("Aroma",    f"{coffee['Aroma']:.1f}")
+                                    st.metric("Posgusto", f"{coffee['Aftertaste']:.1f}")
+                                    st.metric("Acidez",   f"{coffee['Acidity']:.1f}")
+                                    st.metric("Cuerpo",   f"{coffee['Body']:.1f}")
+                                    st.metric("Balance",  f"{coffee['Balance']:.1f}")
+                                    st.metric("Similitud",f"{coffee['similarity_score']:.3f}")
+
+                        st.subheader("📊 Tabla Resumen")
+                        display_cols  = ['Owner', 'Country.of.Origin', 'Total.Cup.Points', 'Flavor', 'Aroma', 'Aftertaste', 'similarity_score']
+                        available_cols = [c for c in display_cols if c in recommendations.columns]
+                        st.dataframe(recommendations[available_cols], use_container_width=True)
+
+                        if len(recommendations) > 1:
+                            fig = px.bar(
+                                recommendations.head(10),
+                                x='Owner', y='Total.Cup.Points',
+                                title="Top 10 Cafés Recomendados",
+                                labels={'Total.Cup.Points': 'Puntuación', 'Owner': 'Café'}
+                            )
+                            fig.update_xaxes(tickangle=45)
+                            st.plotly_chart(fig, use_container_width=True)
+
+                except Exception as e:
+                    st.error(f"❌ Error al obtener recomendaciones: {e}")
+
+# ══════════════════════════════════════════════
+# PÁGINA 3 — Análisis del Modelo
+# ══════════════════════════════════════════════
+elif page == "📊 Análisis del Modelo":
+    st.header("📊 Análisis del Modelo Random Forest Optimizado")
+
+    if model is None:
+        st.error("❌ No se pudo cargar la información del modelo.")
+    else:
+        st.subheader("🌲 Modelo Random Forest")
+
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Modelo", "Random Forest")
+        with col2:
+            st.metric("Tipo", type(model).__name__)
+        with col3:
+            st.metric("Árboles", model.n_estimators)
+        with col4:
+            st.metric("Features", model.n_features_in_)
+
+        # Importancia de características
+        if hasattr(model, 'feature_importances_'):
+            st.subheader("🔍 Importancia de Características")
+            try:
+                importances = model.feature_importances_
+
+                try:
+                    feature_names = preprocessor.get_feature_names_out()
+                except Exception:
+                    feature_names = [f"feature_{i}" for i in range(len(importances))]
+
+                fi_df = pd.DataFrame({
+                    'feature':    feature_names,
+                    'importance': importances
+                }).sort_values('importance', ascending=False)
+
+                fi_df['feature_clean'] = (
+                    fi_df['feature']
+                    .str.replace("num__", "", regex=False)
+                    .str.replace("cat__", "", regex=False)
+                )
+
+                top15 = fi_df.head(15)
+
+                fig = px.bar(
+                    top15,
+                    x='importance',
+                    y='feature_clean',
+                    orientation='h',
+                    color='importance',
+                    color_continuous_scale='Greens',
+                    title="Top 15 Características Más Importantes",
+                    labels={'importance': 'Importancia', 'feature_clean': 'Característica'}
+                )
+                fig.update_layout(height=500, yaxis=dict(autorange="reversed"))
+                st.plotly_chart(fig, use_container_width=True)
+
+                top3 = top15['feature_clean'].tolist()[:3]
+                st.info(
+                    f"Las 3 características más influyentes son: "
+                    f"**{top3[0]}**, **{top3[1]}** y **{top3[2]}**."
+                )
+
+            except Exception as e:
+                st.warning(f"No se pudo mostrar la importancia de características: {e}")
+
+        # Información técnica
+        with st.expander("ℹ️ Información Técnica del Modelo"):
+            c1, c2 = st.columns(2)
+            with c1:
+                st.write(f"**Tipo de modelo:** {type(model).__name__}")
+                st.write(f"**Algoritmo:** Random Forest")
+                st.write(f"**Árboles:** {model.n_estimators}")
+                st.write(f"**Profundidad máxima:** {model.max_depth if model.max_depth else 'Sin límite'}")
+            with c2:
+                st.write(f"**Features:** {model.n_features_in_}")
+                st.write(f"**Criterio:** {model.criterion}")
+                st.write(f"**Min samples split:** {model.min_samples_split}")
+                st.write(f"**Min samples leaf:** {model.min_samples_leaf}")
+
+# ══════════════════════════════════════════════
+# PÁGINA 4 — Información
+# ══════════════════════════════════════════════
+elif page == "ℹ️ Información":
+    st.header("ℹ️ Información del Sistema - Random Forest")
+
+    st.markdown("""
+    ## 🌲 **Acerca del Modelo Random Forest**
+
+    Esta página utiliza específicamente el modelo **Random Forest Optimizado** para predecir la calidad del café
+    basándose en sus características sensoriales y de origen.
+
+    ## 📊 **Características del Modelo**
+
+    - **Algoritmo:** Random Forest Regressor (Optimizado)
+    - **Ventaja:** Robusto a outliers, no lineal, interpretable por importancia de features
+    - **Intervalo de confianza:** Calculado a partir de la dispersión entre los árboles del ensemble
+    - **Uso:** Predicción especializada con Random Forest
+
+    ## 🔄 **Funcionalidades**
+
+    1. **Predicción de Calidad**: Ingresa las características del café o usa ejemplos predefinidos
+    2. **Sistema de Recomendación**: Define tu perfil de preferencias y obtén cafés similares
+    3. **Análisis del Modelo**: Explora las características y rendimiento del modelo Random Forest
+
+    ## 🎯 **Diferencia con otros modelos**
+
+    - **Best Model**: Usa dinámicamente el mejor modelo según ranking (actualmente SVR)
+    - **Gradient Boosting**: Usa específicamente el modelo Gradient Boosting
+    - **Random Forest**: Usa específicamente el modelo Random Forest Optimizado
+
+    ## 👥 **Equipo de Desarrollo**
+
+    **Data Science Henry Bootcamp - Proyecto Final**
+
+    *Sistema integrado para análisis y predicción de calidad de café*
+    """)
+
+    st.markdown("---")
+    st.markdown("""
+    <div style='text-align: center; color: #666;'>
+        <p>📅 Última actualización: {}</p>
+        <p>🌲 Random Forest Coffee Quality Predictor | Data Science Henry Bootcamp</p>
+    </div>
+    """.format(datetime.now().strftime('%Y-%m-%d %H:%M:%S')), unsafe_allow_html=True)
+
+# Footer general
 st.markdown("---")
-st.markdown(
-    "<div style='text-align:center; color:#888; font-size:0.8em;'>"
-    "🌲 Random Forest Optimizado | Feli — Henry Data Science Bootcamp"
-    "</div>",
-    unsafe_allow_html=True
-)
+st.markdown("""
+<div style='text-align: center; color: #666; font-size: 0.8em;'>
+    <p>🌲 Random Forest Optimizado | Data Science Henry Bootcamp</p>
+</div>
+""", unsafe_allow_html=True)
