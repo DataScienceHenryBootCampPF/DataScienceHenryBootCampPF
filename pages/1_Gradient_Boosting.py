@@ -54,6 +54,144 @@ def load_recommender():
         st.error(f"Error al cargar el sistema de recomendación: {e}")
         return None
 
+def get_enhanced_recommendations(recommender, flavor, aftertaste, aroma, acidity, body, balance, 
+                                 species=None, country_filter=None, top_n=10):
+    """
+    Sistema mejorado de recomendación que prioriza países seleccionados y muestra similares.
+    
+    Args:
+        recommender: Sistema de recomendación
+        flavor, aftertaste, aroma, acidity, body, balance: Características sensoriales
+        species: Filtro de especie opcional
+        country_filter: País seleccionado para priorizar
+        top_n: Número de recomendaciones
+        
+    Returns:
+        pd.DataFrame: Recomendaciones priorizadas
+    """
+    try:
+        # 1. Obtener recomendaciones base del sistema original
+        base_recommendations = recommender.recomendar(
+            Flavor=flavor,
+            Aftertaste=aftertaste,
+            Aroma=aroma,
+            Acidity=acidity,
+            Body=body,
+            Balance=balance,
+            species=species,
+            top_n=50  # Obtener más resultados para poder filtrar y priorizar
+        )
+        
+        if base_recommendations is None or base_recommendations.empty:
+            return pd.DataFrame()
+        
+        # 2. Si hay un país seleccionado, priorizarlo
+        if country_filter and country_filter != "Todos":
+            # Separar recomendaciones del país seleccionado vs otros países
+            selected_country_recs = base_recommendations[
+                base_recommendations['Country.of.Origin'] == country_filter
+            ]
+            other_countries_recs = base_recommendations[
+                base_recommendations['Country.of.Origin'] != country_filter
+            ]
+            
+            # 3. Encontrar países similares estadísticamente
+            similar_countries = find_similar_countries(base_recommendations, country_filter)
+            similar_countries_recs = other_countries_recs[
+                other_countries_recs['Country.of.Origin'].isin(similar_countries)
+            ]
+            
+            # 4. Combinar resultados con priorización
+            # Primero: país seleccionado
+            # Segundo: países similares
+            # Tercero: resto de países
+            
+            final_recs = pd.concat([
+                selected_country_recs.head(top_n // 2),  # 50% del país seleccionado
+                similar_countries_recs.head(top_n // 3),  # ~33% de países similares
+                other_countries_recs.head(top_n - len(selected_country_recs.head(top_n // 2)) - len(similar_countries_recs.head(top_n // 3)))
+            ], ignore_index=True)
+            
+            # 5. Añadir información de priorización
+            final_recs['priority'] = final_recs['Country.of.Origin'].apply(
+                lambda x: 'Alta' if x == country_filter 
+                else 'Media' if x in similar_countries 
+                else 'Baja'
+            )
+            
+        else:
+            # Sin filtro de país, usar recomendaciones normales
+            final_recs = base_recommendations.head(top_n)
+            final_recs['priority'] = 'Media'
+        
+        # 6. Ordenar por similitud y prioridad
+        priority_order = {'Alta': 1, 'Media': 2, 'Baja': 3}
+        final_recs['priority_order'] = final_recs['priority'].map(priority_order)
+        final_recs = final_recs.sort_values(['priority_order', 'similarity_score'], 
+                                          ascending=[True, False]).head(top_n)
+        
+        return final_recs.drop('priority_order', axis=1)
+        
+    except Exception as e:
+        st.error(f"Error en el sistema mejorado de recomendación: {e}")
+        # Fallback al sistema original
+        return recommender.recomendar(
+            Flavor=flavor, Aftertaste=aftertaste, Aroma=aroma,
+            Acidity=acidity, Body=body, Balance=balance,
+            species=species, top_n=top_n
+        ) or pd.DataFrame()
+
+def find_similar_countries(recommendations_df, target_country, top_similar=5):
+    """
+    Encuentra países con características estadísticas similares.
+    
+    Args:
+        recommendations_df: DataFrame con recomendaciones
+        target_country: País de referencia
+        top_similar: Número de países similares a encontrar
+        
+    Returns:
+        list: Lista de países similares
+    """
+    try:
+        # Calcular estadísticas por país
+        country_stats = recommendations_df.groupby('Country.of.Origin').agg({
+            'Total.Cup.Points': ['mean', 'std'],
+            'Flavor': 'mean',
+            'Aroma': 'mean',
+            'Acidity': 'mean',
+            'Body': 'mean',
+            'Balance': 'mean'
+        }).round(2)
+        
+        # Aplanar nombres de columnas
+        country_stats.columns = ['_'.join(col).strip() for col in country_stats.columns]
+        
+        # Obtener estadísticas del país objetivo
+        if target_country not in country_stats.index:
+            return []
+        
+        target_stats = country_stats.loc[target_country]
+        
+        # Calcular similitud con otros países
+        similarities = []
+        for country in country_stats.index:
+            if country != target_country:
+                country_data = country_stats.loc[country]
+                # Similitud euclidiana simple
+                distance = np.sqrt(sum((target_stats - country_data) ** 2))
+                similarities.append((country, distance))
+        
+        # Ordenar por similitud (menor distancia = más similar)
+        similarities.sort(key=lambda x: x[1])
+        
+        # Retornar los países más similares
+        return [country for country, _ in similarities[:top_similar]]
+        
+    except Exception as e:
+        st.warning(f"No se pudieron encontrar países similares: {e}")
+        return []
+
 # Cargar modelos
 model, preprocessor, metadata = load_gradient_boosting_model()
 recommender = load_recommender()
@@ -91,24 +229,16 @@ def predict_quality(input_data):
         lower_bound = max(0, prediction - 1.96 * rmse)
         upper_bound = min(100, prediction + 1.96 * rmse)
         
-        # Determinar categoría de calidad
-        if prediction >= 85:
-            quality_category = "Excelente"
-            color = "🟢"
-        elif prediction >= 80:
-            quality_category = "Muy Bueno"
-            color = "🔵"
-        elif prediction >= 75:
-            quality_category = "Bueno"
-            color = "🟡"
+        # Determinar categoría de calidad (usando lógica de demo_prediction.py)
+        umbral_mediana = 82.5
+        if prediction >= umbral_mediana:
+            quality_category = "Café Premium"
         else:
-            quality_category = "Regular"
-            color = "🟠"
+            quality_category = "Café Estándar"
         
         results = {
             'predicted_score': round(prediction, 2),
             'quality_category': quality_category,
-            'color': color,
             'confidence_interval': {
                 'lower': round(lower_bound, 2),
                 'upper': round(upper_bound, 2)
@@ -138,7 +268,7 @@ if page == "🎯 Predicción de Calidad":
         """)
         
         # Tabs para diferentes modos de entrada
-        tab1, tab2 = st.tabs(["📝 Entrada Manual", "🎲 Ejemplos Predefinidos"])
+        tab1, tab2 = st.tabs(["Entrada Manual", "Ejemplos Predefinidos"])
         
         with tab1:
             st.subheader("📝 Entrada Manual de Datos")
@@ -157,7 +287,12 @@ if page == "🎯 Predicción de Calidad":
             with col2:
                 st.write("**Características de Origen**")
                 species = st.selectbox("Especie", ["Arabica", "Robusta"])
-                country = st.selectbox("País de Origen", ["Colombia", "Ethiopia", "Kenya", "Brazil", "Vietnam", "Guatemala", "Costa Rica", "Peru"])
+                country = st.selectbox("País de Origen", [
+    "Brazil", "China", "Colombia", "Costa Rica", "El Salvador", "Ethiopia", 
+    "Guatemala", "Honduras", "Indonesia", "Kenya", "Malawi", "Mexico", 
+    "Nicaragua", "Other", "Peru", "Taiwan", "Tanzania", "Thailand", 
+    "Uganda", "United States (Hawaii)"
+])
                 altitude = st.number_input("Altitud (metros)", 0, 3000, 1500)
                 moisture = st.number_input("Humedad (%)", 0.0, 0.5, 0.12, 0.01)
                 
@@ -205,21 +340,44 @@ if page == "🎯 Predicción de Calidad":
                 
                 if results:
                     # Mostrar resultados
-                    st.success("✅ Predicción realizada con éxito!")
+                    pred = results['predicted_score']
+                    mae_modelo = results['model_rmse']
+                    umbral_mediana = 82.5
+                    limite_inf = pred - mae_modelo
+                    limite_sup = pred + mae_modelo
                     
+                    st.success("Predicción realizada con éxito!")
+                    
+                    # Formato similar a demo_prediction.py
+                    st.markdown("#### " + "*"*40)
+                    st.markdown(f"**RESULTADO DE LA PREDICCIÓN**")
+                    st.markdown(f"**Puntaje Estimado:** {pred:.2f}")
+                    st.markdown(f"**Rango de Confianza (95%):** {limite_inf:.2f} a {limite_sup:.2f}")
+                    st.markdown("---")
+                    
+                    if pred >= umbral_mediana:
+                        st.success(f"**CATEGORÍA: PREMIUM**")
+                        st.info("(Puntaje por encima de la mediana del mercado)")
+                    else:
+                        st.warning(f"**CATEGORÍA: ESTÁNDAR**")
+                        st.info("(Puntaje dentro del rango base de comercialización)")
+                    
+                    st.markdown("*"*40)
+                    
+                    # Métricas adicionales
                     col1, col2, col3 = st.columns(3)
                     
                     with col1:
                         st.metric(
                             label="Puntuación Predicha",
-                            value=f"{results['predicted_score']}/100",
-                            delta=f"{results['color']} {results['quality_category']}"
+                            value=f"{pred}/100",
+                            delta=results['quality_category']
                         )
                     
                     with col2:
                         st.metric(
                             label="Intervalo de Confianza (95%)",
-                            value=f"{results['confidence_interval']['lower']} - {results['confidence_interval']['upper']}"
+                            value=f"{limite_inf:.2f} - {limite_sup:.2f}"
                         )
                     
                     with col3:
@@ -369,7 +527,7 @@ if page == "🎯 Predicción de Calidad":
                     
                     with col1:
                         st.metric("Puntuación", f"{results['predicted_score']}/100")
-                        st.metric("Categoría", f"{results['color']} {results['quality_category']}")
+                        st.metric("Categoría", results['quality_category'])
                     
                     with col2:
                         st.metric("Precisión", results['accuracy_estimate'])
@@ -443,32 +601,54 @@ elif page == "🔍 Sistema de Recomendación":
             
             country_filter = st.selectbox(
                 "Filtrar por país (opcional):",
-                ["Todos"] + ["Colombia", "Ethiopia", "Kenya", "Brazil", "Vietnam", "Guatemala", "Costa Rica", "Peru"]
+                ["Todos"] + [
+                    "Brazil", "China", "Colombia", "Costa Rica", "El Salvador", "Ethiopia", 
+                    "Guatemala", "Honduras", "Indonesia", "Kenya", "Malawi", "Mexico", 
+                    "Nicaragua", "Other", "Peru", "Taiwan", "Tanzania", "Thailand", 
+                    "Uganda", "United States (Hawaii)"
+                ]
             )
         
         # Botón de recomendación
         if st.button("🔍 Obtener Recomendaciones", type="primary"):
             with st.spinner("🔍 Buscando cafés similares..."):
                 try:
-                    recommendations = recommender.recomendar(
-                        Flavor=flavor,
-                        Aftertaste=aftertaste,
-                        Aroma=aroma,
-                        Acidity=acidity,
-                        Body=body,
-                        Balance=balance,
+                    # Sistema mejorado de recomendación con priorización de países
+                    recommendations = get_enhanced_recommendations(
+                        recommender,
+                        flavor=flavor,
+                        aftertaste=aftertaste,
+                        aroma=aroma,
+                        acidity=acidity,
+                        body=body,
+                        balance=balance,
                         species=species_filter if species_filter != "Todas" else None,
+                        country_filter=country_filter if country_filter != "Todos" else None,
                         top_n=top_n
                     )
                     
                     if recommendations.empty:
-                        st.warning("❌ No se encontraron cafés que coincidan con tus preferencias.")
+                        st.warning("No se encontraron cafés que coincidan con tus preferencias.")
                     else:
-                        st.success(f"✅ Se encontraron {len(recommendations)} cafés recomendados!")
+                        # Mostrar información de priorización
+                        if country_filter and country_filter != "Todos":
+                            st.info(f"**Priorización activada para {country_filter}**")
+                            st.write("Los resultados están ordenados por:")
+                            st.write("1. **Alta prioridad** - Cafés del país seleccionado")
+                            st.write("2. **Media prioridad** - Cafés de países con características similares")
+                            st.write("3. **Baja prioridad** - Otros países con alta similitud sensorial")
                         
-                        # Mostrar recomendaciones
+                        st.success(f"Se encontraron {len(recommendations)} cafés recomendados!")
+                        
+                        # Mostrar recomendaciones con información de priorización
                         for i, (_, coffee) in enumerate(recommendations.iterrows(), 1):
+                            priority_emoji = "Alta" if coffee.get('priority') == 'Alta' else "Media" if coffee.get('priority') == 'Media' else "Baja"
+                            priority_color = "red" if coffee.get('priority') == 'Alta' else "orange" if coffee.get('priority') == 'Media' else "gray"
+                            
                             with st.expander(f"{i}. {coffee.get('Owner', 'Unknown')} - {coffee['Total.Cup.Points']:.2f} pts"):
+                                # Mostrar priorización
+                                st.markdown(f"**Prioridad:** <span style='color:{priority_color};font-weight:bold'>{priority_emoji}</span>", 
+                                          unsafe_allow_html=True)
                                 col1, col2 = st.columns(2)
                                 
                                 with col1:
