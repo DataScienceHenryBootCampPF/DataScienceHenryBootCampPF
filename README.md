@@ -133,22 +133,19 @@ Se observa una caída en puntajes máximos desde 2015-2018, reflejando mayor rig
 Para garantizar la reproducibilidad y la mejora continua de DataMark, hemos implementado una infraestructura de MLOps robusta:
 
 1. Experiment Tracking con MLflow
-Utilizamos MLflow para registrar cada iteración de nuestros modelos. Esto nos permite comparar no solo métricas finales, sino también hiperparámetros y tiempos de ejecución.
 
-Registro de Métricas: MAE, RMSE, R² y MAPE se trackean en tiempo real.
-
-Model Registry: Los modelos se guardan automáticamente como artefactos (.pkl) vinculados a su run correspondiente.
-
-Visualización: Para ver el panel de control de experimentos, ejecutar: mlflow ui
+- Utilizamos MLflow para registrar cada iteración de nuestros modelos. Esto nos permite comparar no solo métricas finales, sino también hiperparámetros y tiempos de ejecución.
+- Registro de Métricas: MAE, RMSE, R² y MAPE se trackean en tiempo real.
+- Model Registry: Los modelos se guardan automáticamente como artefactos (.pkl) vinculados a su run correspondiente.
+- Visualización: Para ver el panel de control de experimentos, ejecutar: mlflow ui
 
 ![Panel de Control MLflow](reports/mlflow/images/mlflow1.png)
 
 2. Pipeline de CI/CD (GitHub Actions)
 Implementamos Integración Continua para validar el pipeline de datos en cada cambio del repositorio:
 
-Validación Automática: Cada push a las ramas principales dispara un workflow en GitHub que instala el entorno, procesa los datos y entrena los modelos.
-
-Garantía de Calidad: El sistema verifica que los archivos críticos (.pkl, métricas y JSON de categorías) se generen correctamente, asegurando que el código siempre sea ejecutable.
+- Validación Automática: Cada push a las ramas principales dispara un workflow en GitHub que instala el entorno, procesa los datos y entrena los modelos.
+- Garantía de Calidad: El sistema verifica que los archivos críticos (.pkl, métricas y JSON de categorías) se generen correctamente, asegurando que el código siempre sea ejecutable.
 
 ## 🎮 Demostración Interactiva
 
