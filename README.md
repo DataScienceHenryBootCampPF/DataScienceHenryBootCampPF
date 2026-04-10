@@ -141,7 +141,7 @@ Model Registry: Los modelos se guardan automáticamente como artefactos (.pkl) v
 
 Visualización: Para ver el panel de control de experimentos, ejecutar: mlflow ui
 
-![Panel de Control MLflow](reports/images/mlflow1.png)
+![Panel de Control MLflow](reports/mlflow/images/mlflow1.png)
 
 2. Pipeline de CI/CD (GitHub Actions)
 Implementamos Integración Continua para validar el pipeline de datos en cada cambio del repositorio:
