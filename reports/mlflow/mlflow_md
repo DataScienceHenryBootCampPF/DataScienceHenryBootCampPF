@@ -18,16 +18,22 @@ MLflow no solo guarda los números, sino también el archivo binario del modelo 
 Beneficio: Garantiza que el modelo que estamos testeando sea exactamente el mismo que se subirá a la Demo de Streamlit.
 
 D. Gestión de Experimentos
-Agrupamos todas las corridas bajo el nombre "DataMark_Coffee_Prediction".
+Agrupamos todas las corridas bajo el nombre "Quality_Coffee_Prediction".
 
 Beneficio: Separa los experimentos de predicción de calidad de los de segmentación (Clustering), manteniendo el proyecto organizado.
 
+![Panel de Control MLflow](reports/images/mlflow1.png)
+
+*En la imagen se observa cómo comparamos el MAE y RMSE entre XGBoost, CatBoost y Random Forest para seleccionar el modelo con mayor capacidad de generalización.*
 3. Integración en el Pipeline (MLOps)
 La implementación de MLflow no es un proceso aislado; está conectada a nuestro Pipeline Reproducible:
 
 Validación Automática: El pipeline usa MLflow para decidir qué modelo es el "campeón".
 
 Dashboard de Auditoría: Cualquier evaluador puede ejecutar mlflow ui y ver el historial completo de decisiones técnicas que tomamos, justificando por qué elegimos un modelo sobre otro basándose en datos, no en intuición.
+
+![Panel de Control MLflow](reports/images/mlflow2.png)
+![Panel de Control MLflow](reports/images/mlflow3.png)
 
 4. Métricas de Éxito en la Implementación
 Gracias a MLflow, pudimos determinar que:
