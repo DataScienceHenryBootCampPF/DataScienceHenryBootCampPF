@@ -32,8 +32,9 @@ Validación Automática: El pipeline usa MLflow para decidir qué modelo es el "
 
 Dashboard de Auditoría: Cualquier evaluador puede ejecutar mlflow ui y ver el historial completo de decisiones técnicas que tomamos, justificando por qué elegimos un modelo sobre otro basándose en datos, no en intuición.
 
-![Panel de Control MLflow](mlflow/images/mlflow2.png)
-![Panel de Control MLflow](reports/images/mlflow3.png)
+![Panel de Control MLflow](images/mlflow2.png)
+
+![Panel de Control MLflow](images/mlflow3.png)
 
 4. Métricas de Éxito en la Implementación
 Gracias a MLflow, pudimos determinar que:
