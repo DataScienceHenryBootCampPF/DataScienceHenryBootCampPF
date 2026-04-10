@@ -1,0 +1,40 @@
+## MLflow Tracking
+
+Implementamos MLflow como nuestra "Caja Negra" de experimentos. Cada vez que ejecutamos el script de entrenamiento, ocurren cuatro procesos automáticos:
+
+A. Registro de Parámetros (Logging)
+Guardamos la configuración exacta de cada modelo (ej. n_estimators, max_depth, learning_rate).
+
+Beneficio: Si encontramos un modelo "mágico" que predice perfecto, podemos recrearlo exactamente igual meses después.
+
+B. Tracking de Métricas en Tiempo Real
+Registramos el MAE, RMSE, R² y MAPE de cada ejecución.
+
+Beneficio: Permite visualizar curvas de aprendizaje y comparar el error promedio entre modelos de forma visual.
+
+C. Almacenamiento de Artefactos (Model Registry)
+MLflow no solo guarda los números, sino también el archivo binario del modelo (.pkl) y el preprocesador.
+
+Beneficio: Garantiza que el modelo que estamos testeando sea exactamente el mismo que se subirá a la Demo de Streamlit.
+
+D. Gestión de Experimentos
+Agrupamos todas las corridas bajo el nombre "DataMark_Coffee_Prediction".
+
+Beneficio: Separa los experimentos de predicción de calidad de los de segmentación (Clustering), manteniendo el proyecto organizado.
+
+3. Integración en el Pipeline (MLOps)
+La implementación de MLflow no es un proceso aislado; está conectada a nuestro Pipeline Reproducible:
+
+Validación Automática: El pipeline usa MLflow para decidir qué modelo es el "campeón".
+
+Dashboard de Auditoría: Cualquier evaluador puede ejecutar mlflow ui y ver el historial completo de decisiones técnicas que tomamos, justificando por qué elegimos un modelo sobre otro basándose en datos, no en intuición.
+
+4. Métricas de Éxito en la Implementación
+Gracias a MLflow, pudimos determinar que:
+
+El modelo SVR presenta la mejor relación entre tiempo de entrenamiento y precisión (MAE).
+
+Existe una estabilidad en el error entre diferentes semillas aleatorias, lo que confirma que el preprocesamiento de categorías "Other" fue efectivo.
+
+5. Conclusión para el Jurado
+"Con la implementación de MLflow, de un simple script de predicción se paso a un sistema de Machine Learning profesional. Hemos pasado de la experimentación manual a un flujo de trabajo de MLOps donde cada decisión está trackeada, es auditable y, sobre todo, es 100% reproducible."
