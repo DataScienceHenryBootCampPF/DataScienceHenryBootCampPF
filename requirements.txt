@@ -8,5 +8,9 @@ joblib
 scipy
 imbalanced-learn
 ipykernel
+streamlit
+plotly
 xgboost
 catboost
+mlflow
+
