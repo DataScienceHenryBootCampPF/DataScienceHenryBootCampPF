@@ -249,10 +249,44 @@ STREAMLIT_SERVER_ADDRESS=localhost
 
 ## 🚀 Despliegue
 
-### Opción 1: Streamlit Cloud
-1. Sube el código a GitHub
-2. Conecta tu repositorio en [Streamlit Cloud](https://share.streamlit.io/)
-3. Configura el archivo `requirements.txt`
+### Opción 1: Streamlit Cloud (Recomendado)
+
+**Aplicación en producción:** [https://datasciencehenrybootcamppf-vqjj26ywtdnrcvu9dsedwd.streamlit.app](https://datasciencehenrybootcamppf-vqjj26ywtdnrcvu9dsedwd.streamlit.app)
+
+#### ¿Cómo funciona Streamlit Cloud?
+Streamlit Cloud es la forma más sencilla de desplegar aplicaciones Streamlit. Funciona automáticamente 24/7 sin necesidad de mantener servidores.
+
+#### Pasos para despliegue:
+1. **Prepara tu repositorio**:
+   - Asegúrate que `requirements.txt` esté completo
+   - Verifica que `app_main.py` sea el archivo principal
+   - Sube todo a GitHub
+
+2. **Configura en Streamlit Cloud**:
+   - Ve a [https://streamlit.io/cloud](https://streamlit.io/cloud)
+   - Inicia sesión con GitHub
+   - Haz clic en "New app"
+   - Selecciona tu repositorio y rama
+   - Configura `app_main.py` como archivo principal
+
+3. **Obtén tu enlace público**:
+   - Streamlit Cloud genera automáticamente un enlace
+   - Tu aplicación queda disponible 24/7
+   - Escala automáticamente según el tráfico
+
+#### Ventajas:
+- **Gratis** para proyectos públicos
+- **Automático**: Detecta cambios y redeploya
+- **Sin configuración** de servidores
+- **Escalable** automáticamente
+- **HTTPS incluido** por defecto
+
+#### Características de nuestra implementación:
+- **Modelos de Machine Learning**: Random Forest, Gradient Boosting, Best Model
+- **Sistema de recomendación**: Búsqueda inteligente de cafés
+- **Visualizaciones interactivas**: Gráficos con Plotly
+- **Interfaz moderna**: Diseño responsivo con Streamlit
+- **Procesamiento en tiempo real**: Predicciones instantáneas
 
 ### Opción 2: Docker
 ```dockerfile
