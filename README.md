@@ -8,9 +8,18 @@ Este proyecto analiza el dataset del Coffee Quality Institute para predecir la c
 
 ```
 DataScienceHenryBootCampPF/
+├── .github/workflows/         # Automatización (CI/CD)
+│   └── main.yml
 ├── data/                       # Datos del proyecto
 │   ├── raw/                    # Dataset original
 │   └── processed/              # Datos limpios y procesados
+├── metrics/                   # Reportes de performance
+│   ├── model_comparison_ranking.csv
+│   └── best_model_summary.txt
+├── mlruns/                    # Tracking de experimentos (Local)
+├── models/                    # Modelos entrenados
+│   ├── prediction/            # Modelos de predicción
+│   └── recommender/           # Modelos de clustering
 ├── notebooks/                  # Jupyter notebooks del análisis
 │   ├── 00_preprocessing.ipynb  # Limpieza y preprocesamiento
 │   ├── 01_EDA.ipynb           # Análisis Exploratorio de Datos
@@ -20,13 +29,14 @@ DataScienceHenryBootCampPF/
 │   ├── cleaning.py            # Funciones de limpieza
 │   ├── predictor/             # Módulo de predicción
 │   └── recommender/           # Módulo de recomendación
-├── models/                    # Modelos entrenados
-│   ├── prediction/            # Modelos de predicción
-│   └── recommender/           # Modelos de clustering
 ├── reports/                   # Reportes y visualizaciones
 │   └── EDA/                   # Análisis exploratorio
 │       ├── EDA_REPORT.md      # Reporte completo del EDA
 │       └── images/            # Gráficos del análisis
+│   └── mlflow/                # MLflow Tracking
+│       └── mlflow_md
+│   └── validation/            # Plan de validación de mediciones
+│       └── validation_plan 
 ├── metrics/                   # Métricas de evaluación
 ├── demo_prediction.py         # Demo de predicción
 ├── demo_recommender.py        # Demo de recomendación
@@ -118,6 +128,25 @@ Se observa una caída en puntajes máximos desde 2015-2018, reflejando mayor rig
 - Creación de Nombre_Comercial para identidad de marketing
 - Eliminación de variables sin varianza (Sweetness, Clean.Cup, Uniformity)
 
+## Ciclo de Vida del Modelo (MLOps)
+
+Para garantizar la reproducibilidad y la mejora continua de DataMark, hemos implementado una infraestructura de MLOps robusta:
+
+1. Experiment Tracking con MLflow
+
+- Utilizamos MLflow para registrar cada iteración de nuestros modelos. Esto nos permite comparar no solo métricas finales, sino también hiperparámetros y tiempos de ejecución.
+- Registro de Métricas: MAE, RMSE, R² y MAPE se trackean en tiempo real.
+- Model Registry: Los modelos se guardan automáticamente como artefactos (.pkl) vinculados a su run correspondiente.
+- Visualización: Para ver el panel de control de experimentos, ejecutar: mlflow ui
+
+![Panel de Control MLflow](reports/mlflow/images/mlflow1.png)
+
+2. Pipeline de CI/CD (GitHub Actions)
+Implementamos Integración Continua para validar el pipeline de datos en cada cambio del repositorio:
+
+- Validación Automática: Cada push a las ramas principales dispara un workflow en GitHub que instala el entorno, procesa los datos y entrena los modelos.
+- Garantía de Calidad: El sistema verifica que los archivos críticos (.pkl, métricas y JSON de categorías) se generen correctamente, asegurando que el código siempre sea ejecutable.
+
 ## 🎮 Demostración Interactiva
 
 ### Predicción de Calidad
@@ -176,6 +205,9 @@ Ofrece recomendaciones personalizadas basadas en perfiles de preferencia.
 - **XGBoost & CatBoost**: Gradient Boosting
 - **Matplotlib & Seaborn**: Visualización
 - **Jupyter**: Análisis interactivo
+- MLflow: Gestión del ciclo de vida de ML y tracking de experimentos.
+- GitHub Actions: Automatización de workflows y CI/CD.
+- Joblib: Serialización de modelos para producción.
 
 ## 👥 Contribuciones
 
