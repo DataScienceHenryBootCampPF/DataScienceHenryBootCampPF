@@ -8,14 +8,13 @@ Este proyecto analiza el dataset del Coffee Quality Institute para predecir la c
 
 ```
 DataScienceHenryBootCampPF/
-<<<<<<< HEAD
 ├── app_main.py                     # Aplicación principal de Streamlit
 ├── .streamlit/                     # Configuración de Streamlit
 │   └── config.toml                # Configuración del servidor y tema
 ├── pages/                          # Páginas de la aplicación Streamlit
-│   ├── 1_Gradient_Boosting.py     # Modelo Gradient Boosting - Matías Gutierrez
-│   ├── 2_Random_Forest.py         # Modelo Random Forest - Felipe Baquero
-│   └── 3_Best_Model.py            # Sistema dinámico - Matías & Felipe
+│   ├── 1_Gradient_Boosting.py     # Modelo Gradient Boosting 
+│   ├── 2_Random_Forest.py         # Modelo Random Forest
+│   └── 3_Best_Model.py            # Sistema dinámico 
 ├── .github/workflows/             # Automatización (CI/CD)
 │   └── main.yml
 ├── data/                       # Datos del proyecto
@@ -25,7 +24,6 @@ DataScienceHenryBootCampPF/
 │   ├── model_comparison_ranking.csv
 │   └── best_model_summary.txt
 ├── mlruns/                     # Tracking de experimentos (Local)
-=======
 ├── .github/workflows/         # Automatización (CI/CD)
 │   └── main.yml
 ├── data/                       # Datos del proyecto
@@ -35,7 +33,6 @@ DataScienceHenryBootCampPF/
 │   ├── model_comparison_ranking.csv
 │   └── best_model_summary.txt
 ├── mlruns/                    # Tracking de experimentos (Local)
->>>>>>> 57e7aaa29065b6bf87615443fe55a3aae8915e5b
 ├── models/                    # Modelos entrenados
 │   ├── prediction/            # Modelos de predicción
 │   └── recommender/           # Modelos de clustering
@@ -56,10 +53,7 @@ DataScienceHenryBootCampPF/
 │       └── mlflow_md
 │   └── validation/            # Plan de validación de mediciones
 │       └── validation_plan 
-<<<<<<< HEAD
-=======
 ├── metrics/                   # Métricas de evaluación
->>>>>>> 57e7aaa29065b6bf87615443fe55a3aae8915e5b
 ├── demo_prediction.py         # Demo de predicción
 ├── demo_recommender.py        # Demo de recomendación
 └── requirements.txt           # Dependencias del proyecto
@@ -225,24 +219,6 @@ Ofrece recomendaciones personalizadas basadas en perfiles de preferencia.
 
 ### ¿Cómo funciona Streamlit Cloud?
 Streamlit Cloud es la forma más sencilla de desplegar aplicaciones Streamlit. Funciona automáticamente 24/7 sin necesidad de mantener servidores.
-
-### Pasos para despliegue:
-1. **Prepara tu repositorio**:
-   - Asegúrate que `requirements.txt` esté completo
-   - Verifica que `app_main.py` sea el archivo principal
-   - Sube todo a GitHub
-
-2. **Configura en Streamlit Cloud**:
-   - Ve a [https://streamlit.io/cloud](https://streamlit.io/cloud)
-   - Inicia sesión con GitHub
-   - Haz clic en "New app"
-   - Selecciona tu repositorio y rama
-   - Configura `app_main.py` como archivo principal
-
-3. **Obtén tu enlace público**:
-   - Streamlit Cloud genera automáticamente un enlace
-   - Tu aplicación queda disponible 24/7
-   - Escala automáticamente según el tráfico
 
 ### Ventajas:
 - **Gratis** para proyectos públicos
