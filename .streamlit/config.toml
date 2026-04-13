@@ -14,7 +14,6 @@ enableXsrfProtection = false
 
 [browser]
 gatherUsageStats = false
-showErrorDetails = true
 
 [logger]
 level = "info"
