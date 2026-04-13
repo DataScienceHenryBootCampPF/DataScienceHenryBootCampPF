@@ -8,6 +8,7 @@ Este proyecto analiza el dataset del Coffee Quality Institute para predecir la c
 
 ```
 DataScienceHenryBootCampPF/
+<<<<<<< HEAD
 ├── app_main.py                     # Aplicación principal de Streamlit
 ├── .streamlit/                     # Configuración de Streamlit
 │   └── config.toml                # Configuración del servidor y tema
@@ -24,6 +25,17 @@ DataScienceHenryBootCampPF/
 │   ├── model_comparison_ranking.csv
 │   └── best_model_summary.txt
 ├── mlruns/                     # Tracking de experimentos (Local)
+=======
+├── .github/workflows/         # Automatización (CI/CD)
+│   └── main.yml
+├── data/                       # Datos del proyecto
+│   ├── raw/                    # Dataset original
+│   └── processed/              # Datos limpios y procesados
+├── metrics/                   # Reportes de performance
+│   ├── model_comparison_ranking.csv
+│   └── best_model_summary.txt
+├── mlruns/                    # Tracking de experimentos (Local)
+>>>>>>> 57e7aaa29065b6bf87615443fe55a3aae8915e5b
 ├── models/                    # Modelos entrenados
 │   ├── prediction/            # Modelos de predicción
 │   └── recommender/           # Modelos de clustering
@@ -44,6 +56,10 @@ DataScienceHenryBootCampPF/
 │       └── mlflow_md
 │   └── validation/            # Plan de validación de mediciones
 │       └── validation_plan 
+<<<<<<< HEAD
+=======
+├── metrics/                   # Métricas de evaluación
+>>>>>>> 57e7aaa29065b6bf87615443fe55a3aae8915e5b
 ├── demo_prediction.py         # Demo de predicción
 ├── demo_recommender.py        # Demo de recomendación
 └── requirements.txt           # Dependencias del proyecto
