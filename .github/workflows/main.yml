@@ -22,23 +22,35 @@ jobs:
     - name: Instalar dependencias
       run: |
         python -m pip install --upgrade pip
-        pip install pandas numpy scikit-learn xgboost catboost joblib mlflow
+        # Añadimos seaborn y matplotlib para que los scripts de visualización no fallen
+        pip install pandas numpy scikit-learn xgboost catboost joblib mlflow matplotlib seaborn
 
     - name: Ejecutar Pipeline de Entrenamiento
       run: |
-        # Aquí ejecutamos tu script principal. 
-        # Asegurate de que el nombre coincida con tu archivo .py
+        # Ejecutamos tu script principal. 
+        # Asegúrate de que este script incluya la lógica de guardado que armamos
         python model_training.py
 
     - name: Verificar generación de Artefactos
       run: |
-        # Comprobamos que existan los archivos críticos para la entrega
+        # 1. Verificamos modelos de predicción
         test -f ./models/prediction/coffee_model_SVR.pkl
+        
+        # 2. Verificamos métricas
         test -f ./metrics/model_comparison_ranking.csv
-        echo "✅ Pipeline ejecutado con éxito y archivos generados."
+        
+        # 3. Verificamos los nuevos archivos del Recomendador (Clusterización y PCA)
+        test -f ./models/recommender/coffee_catalog_clustered.csv
+        test -f ./models/recommender/proyeccion_2d_pca.csv
+        test -f ./models/recommender/perfil_sabor_clusters.csv
+        
+        echo "✅ Todos los archivos críticos fueron generados correctamente."
 
-    - name: Upload de métricas como artefactos de GitHub
+    - name: Upload de Resultados (Métricas y Modelos)
       uses: actions/upload-artifact@v3
       with:
-        name: model-metrics
-        path: ./metrics/model_comparison_ranking.csv
+        name: pipeline-results
+        path: |
+          ./metrics/
+          ./models/recommender/
+          ./models/prediction/
