@@ -80,6 +80,7 @@ Desarrollado por **Enzo Zambón**, esta sección revoluciona la experiencia del 
 - **🌲 Felipe Baquero:** Random Forest Specialist y Best Model
 - **🌿 Matías Gutierrez:** Gradient Boosting Developer y Best Model 
 - **🏆 Enzo Zambón:** Interactive Systems Architect
+- **🧪 Claudia Rivero:** Quality Assurance & System Testing
 
 *Un proyecto colaborativo que demuestra el poder del trabajo en equipo y la aplicación de diferentes técnicas de Machine Learning.*
 """)
