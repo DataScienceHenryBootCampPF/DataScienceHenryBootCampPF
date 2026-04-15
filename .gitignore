@@ -18,3 +18,11 @@ mlartifacts/
 
 # Variables de entorno (donde guardarías contraseñas o API Keys)
 .env
+
+# Excepción para GitHub Actions
+!.github/
+
+# MLflow (Para que no se suban los experimentos locales)
+mlruns/
+mlartifacts/
+mlflow.db
