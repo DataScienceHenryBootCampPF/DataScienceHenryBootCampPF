@@ -87,6 +87,130 @@ Desarrollado por **Enzo Zambón**, esta sección revoluciona la experiencia del 
 
 st.info("👈 Seleccioná una página en el sidebar para comenzar a explorar el sistema completo.")
 
+# Opción adicional para ver la guía de calidad
+st.sidebar.markdown("---")
+st.sidebar.subheader("📚 Recursos")
+show_guide = st.sidebar.checkbox("📖 Mostrar Guía de Calidad de Cafés")
+
+if show_guide:
+    st.sidebar.markdown("""
+    ### 📖 **Guía de Calidad de Cafés**
+    
+    **¿Qué encontrarás?**
+    - 🎯 **Criterios de calidad** para cada modelo
+    - 📊 **Umbrales** de clasificación (Premium/Estándar)
+    - 🔍 **Factores clave** que determinan la calidad
+    - 📈 **Estrategias** para mejorar de estándar a premium
+    - 💡 **Casos prácticos** para productores y tostadores
+    
+    **Modelos Analizados:**
+    - 🌿 **Gradient Boosting** (Matías Gutierrez)
+    - 🌲 **Random Forest** (Felipe Baquero)
+    - 🏆 **Best Model** (SVR - Sistema dinámico)
+    
+    **Ubicación:** `pages/Guia de calidad de cafes.md`
+    """)
+    
+    # Mostrar contenido de la guía
+    try:
+        with open("pages/Guia de calidad de cafes.md", "r", encoding="utf-8") as f:
+            guide_content = f.read()
+        
+        st.markdown("---")
+        st.header("📖 Guía de Calidad de Cafés")
+        
+        # Botones de navegación rápida
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            if st.button("🎯 Umbrales", key="thresholds"):
+                st.markdown("### 🎯 **Umbrales de Calidad**")
+                st.markdown("""
+                **Gradient Boosting:**
+                - Premium: ≥ 82.5 puntos
+                - Estándar: < 82.5 puntos
+                
+                **Random Forest:**
+                - Premium+ (Excelente): ≥ 85 puntos
+                - Premium (Muy Bueno): ≥ 80 puntos
+                - Estándar+ (Bueno): ≥ 75 puntos
+                - Estándar (Regular): < 75 puntos
+                
+                **Best Model (SVR):**
+                - Premium: ≥ 82.5 puntos (mediana del mercado)
+                - Estándar: < 82.5 puntos
+                """)
+        
+        with col2:
+            if st.button("🔍 Factores Clave", key="factors"):
+                st.markdown("### 🔍 **Factores Clave para Premium**")
+                st.markdown("""
+                **1. Atributos Sensoriales (Impacto Alto):**
+                - Aroma ≥ 8.0/10
+                - Sabor ≥ 8.2/10
+                - Posgusto ≥ 8.1/10
+                - Balance ≥ 8.0/10
+                
+                **2. Procesamiento (Impacto Alto):**
+                - Honey/Natural vs Washed
+                - Humedad óptima: 10-12%
+                
+                **3. Origen (Impacto Medio):**
+                - Altitud ≥ 1400m (óptimo: 1600-2000m)
+                - Países premium: Etiopía, Kenya, Colombia
+                
+                **4. Defectos (Impacto Crítico):**
+                - Category.One.Defects = 0 para premium
+                - Category.Two.Defects ≤ 1 para premium
+                """)
+        
+        with col3:
+            if st.button("📈 Estrategias", key="strategies"):
+                st.markdown("### 📈 **Estrategias de Mejora**")
+                st.markdown("""
+                **Control Sensorial (+3-5 puntos):**
+                - Mejorar balance de acidez
+                - Extender tiempo de extracción
+                
+                **Mejora de Proceso (+2-3 puntos):**
+                - Implementar procesos Honey/Natural
+                - Controlar fermentación
+                
+                **Optimización de Origen (+1-2 puntos):**
+                - Buscar fincas ≥ 1400m
+                - Preferir variedades premium
+                
+                **Reducción de Defectos (+1-3 puntos):**
+                - Control de calidad riguroso
+                - Selección manual de granos
+                """)
+        
+        with col4:
+            if st.button("💡 Casos Prácticos", key="cases"):
+                st.markdown("### 💡 **Casos de Uso Prácticos**")
+                st.markdown("""
+                **Productor:**
+                - Lote actual: 78 puntos (Estándar)
+                - Con mejoras: 84 puntos (Premium)
+                
+                **Tostador:**
+                - Criterios de compra para café premium
+                - Validación de calidad objetiva
+                
+                **Catador:**
+                - Evaluación estandarizada
+                - Validación cruzada entre modelos
+                """)
+        
+        # Mostrar guía completa
+        if st.button("📖 Ver Guía Completa", key="full_guide"):
+            st.markdown(guide_content)
+            
+    except FileNotFoundError:
+        st.error("❌ Guía no encontrada. Asegúrate que el archivo 'pages/Guia de calidad de cafes.md' exista.")
+    except Exception as e:
+        st.error(f"❌ Error al cargar la guía: {e}")
+
 st.markdown("---")
 
 # Sección de características destacadas
