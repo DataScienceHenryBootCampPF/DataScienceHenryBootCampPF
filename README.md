@@ -267,3 +267,45 @@ Puntos clave del valor entregado:
 Este proyecto fue desarrollado como parte del Bootcamp de Data Science de Henry, aplicando metodologías de ciencia de datos para resolver un problema real del mercado del café de especialidad.
 
 ---
+
+## 📊 Ejemplos Visuales de la Aplicación
+
+Nuestra aplicación en producción ofrece una experiencia completa e intuitiva para el análisis de calidad de café:
+
+### **Modelo Gradient Boosting**
+![Gradient Boosting Interface](pages/Imagenes/1_Gradient_Boosting.jpeg)
+*Interfaz del modelo Gradient Boosting desarrollado por Matías Gutierrez. Permite análisis detallados con ejemplos predefinidos y visualizaciones interactivas.*
+
+#### **Resultados - Gradient Boosting**
+![Gradient Boosting Results](pages/Imagenes/2_Gradient_Boosting.jpeg)
+*Resultados obtenidos: Predicción de 85.3 puntos clasificando el café como "Premium" con gráfico radar del perfil sensorial y métricas detalladas.*
+
+### **Modelo Random Forest**
+![Random Forest Interface](pages/Imagenes/1_Random_Forest.jpg)
+*Interfaz del modelo Random Forest creado por Felipe Baquero. Ofrece análisis de importancia de características y categorización granular de la calidad.*
+
+#### **Resultados - Random Forest**
+![Random Forest Results](pages/Imagenes/2_Random_Forest.jpg)
+*Resultados obtenidos: Puntuación de 83.7 puntos con categorización "Muy Bueno" y visualización gauge interactiva mostrando el análisis de calidad.*
+
+### **Best Model - Sistema Dinámico**
+![Best Model Interface](pages/Imagenes/1_Best_Model.jpeg)
+*Sistema inteligente que selecciona automáticamente el mejor modelo. Integra demos interactivos y análisis comparativo en tiempo real.*
+
+#### **Resultados - Best Model**
+![Best Model Results](pages/Imagenes/2_Best_Model.jpeg)
+*Resultados obtenidos: Sistema usando SVR con precisión del 98.2%, mostrando predicción detallada, intervalos de confianza y análisis comparativo entre modelos.*
+
+### **Análisis Comparativo**
+Las interfaces muestran diferentes enfoques pero con una experiencia unificada:
+
+- **Gradient Boosting**: Enfoque en relaciones complejas y no lineales
+- **Random Forest**: Alta interpretabilidad con 4 niveles de categorización  
+- **Best Model**: Selección dinámica del mejor modelo (actualmente SVR)
+
+### **Características Visuales Compartidas**
+- **Entrada manual y ejemplos predefinidos** para facilitar el uso
+- **Gráficos interactivos** (radar, gauge, barras) con Plotly
+- **Sistema de recomendación** con priorización geográfica
+- **Métricas en tiempo real** con intervalos de confianza
+- **Diseño responsivo** adaptable a diferentes dispositivos
