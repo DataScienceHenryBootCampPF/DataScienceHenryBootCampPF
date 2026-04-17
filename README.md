@@ -227,48 +227,7 @@ Streamlit Cloud es la forma más sencilla de desplegar aplicaciones Streamlit. F
 - **Interfaz moderna**: Diseño responsivo con Streamlit
 - **Procesamiento en tiempo real**: Predicciones instantáneas
 
-### Dashboard interactivo
-
-Al implementar Power BI logramos transformar algoritmos complejos en una herramienta visual que permite a un negocio de café predecir la calidad de sus compras, segmentar a sus clientes por perfil de sabor y reducir el riesgo de pagar de más por un producto que no cumple con los estándares Premium
-
-![DescripcionMuestra](Dashboard/Images/1-Descripcion-Muestra.png)
-
-![OirgenProcesamient](Dashboard/Images/3-Origen-Procesamiento.png)
-
-![OirgenProcesamient](Dashboard/Images/5-Modelo-de-Recomendacion.png)
-
-### Conclusión
-
-El proyecto logró transformar la subjetividad sensorial del café en un sistema de decisiones auditable y escalable. A través de la implementación de SVR y K-Means, no solo eliminamos la incertidumbre en la predicción de calidad, sino que logramos segmentar el mercado en perfiles de sabor claros (Vibrante, Equilibrado e Intenso).
-
-Puntos clave del valor entregado:
-
-   - Validación de Calidad: Mediante el modelo SVR (AUC 0.73), el e-commerce ahora cuenta con un "catador digital" que valida el puntaje de los granos, reduciendo la asimetría de información entre el productor y el comprador final.
-
-   - Personalización del Cliente: La clusterización permitió pasar de una venta genérica a una experiencia de usuario dirigida, donde la consistencia del sabor está garantizada por la proximidad matemática en nuestros grupos de datos.
-
-   - Robustez Productiva: La integración con MLflow asegura que cada modelo es reproducible y profesional, mientras que el dashboard en Power BI democratiza el acceso a estos hallazgos para la toma de decisiones comerciales.
-
-## 📚 Tecnologías Utilizadas
-
-- **Python 3.x**
-- **Pandas & NumPy**: Manipulación de datos
-- **Scikit-learn**: Machine Learning
-- **XGBoost & CatBoost**: Gradient Boosting
-- **Matplotlib & Seaborn**: Visualización
-- **Jupyter**: Análisis interactivo
-- **MLflow**: Gestión del ciclo de vida de ML y tracking de experimentos.
-- **GitHub Actions**: Automatización de workflows y CI/CD.
-- **Joblib**: Serialización de modelos para producción.
-- **Power Bi**: Dashboard interactivo
-
-## 👥 Contribuciones
-
-Este proyecto fue desarrollado como parte del Bootcamp de Data Science de Henry, aplicando metodologías de ciencia de datos para resolver un problema real del mercado del café de especialidad.
-
----
-
-## 📊 Ejemplos Visuales de la Aplicación
+### Ejemplos Visuales de la Aplicación
 
 Nuestra aplicación en producción ofrece una experiencia completa e intuitiva para el análisis de calidad de café:
 
@@ -309,3 +268,44 @@ Las interfaces muestran diferentes enfoques pero con una experiencia unificada:
 - **Sistema de recomendación** con priorización geográfica
 - **Métricas en tiempo real** con intervalos de confianza
 - **Diseño responsivo** adaptable a diferentes dispositivos
+
+### Dashboard interactivo
+
+Al implementar Power BI logramos transformar algoritmos complejos en una herramienta visual que permite a un negocio de café predecir la calidad de sus compras, segmentar a sus clientes por perfil de sabor y reducir el riesgo de pagar de más por un producto que no cumple con los estándares Premium
+
+![DescripcionMuestra](Dashboard/Images/1-Descripcion-Muestra.png)
+
+![OirgenProcesamient](Dashboard/Images/3-Origen-Procesamiento.png)
+
+![OirgenProcesamient](Dashboard/Images/5-Modelo-de-Recomendacion.png)
+
+### Conclusión
+
+El proyecto logró transformar la subjetividad sensorial del café en un sistema de decisiones auditable y escalable. A través de la implementación de SVR y K-Means, no solo eliminamos la incertidumbre en la predicción de calidad, sino que logramos segmentar el mercado en perfiles de sabor claros (Vibrante, Equilibrado e Intenso).
+
+Puntos clave del valor entregado:
+
+   - Validación de Calidad: Mediante el modelo SVR (AUC 0.73), el e-commerce ahora cuenta con un "catador digital" que valida el puntaje de los granos, reduciendo la asimetría de información entre el productor y el comprador final.
+
+   - Personalización del Cliente: La clusterización permitió pasar de una venta genérica a una experiencia de usuario dirigida, donde la consistencia del sabor está garantizada por la proximidad matemática en nuestros grupos de datos.
+
+   - Robustez Productiva: La integración con MLflow asegura que cada modelo es reproducible y profesional, mientras que el dashboard en Power BI democratiza el acceso a estos hallazgos para la toma de decisiones comerciales.
+
+## 📚 Tecnologías Utilizadas
+
+- **Python 3.x**
+- **Pandas & NumPy**: Manipulación de datos
+- **Scikit-learn**: Machine Learning
+- **XGBoost & CatBoost**: Gradient Boosting
+- **Matplotlib & Seaborn**: Visualización
+- **Jupyter**: Análisis interactivo
+- **MLflow**: Gestión del ciclo de vida de ML y tracking de experimentos.
+- **GitHub Actions**: Automatización de workflows y CI/CD.
+- **Joblib**: Serialización de modelos para producción.
+- **Power Bi**: Dashboard interactivo
+
+## 👥 Contribuciones
+
+Este proyecto fue desarrollado como parte del Bootcamp de Data Science de Henry, aplicando metodologías de ciencia de datos para resolver un problema real del mercado del café de especialidad.
+
+---
