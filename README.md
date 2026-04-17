@@ -8,31 +8,20 @@ Este proyecto analiza el dataset del Coffee Quality Institute para predecir la c
 
 ```
 DataScienceHenryBootCampPF/
-├── app_main.py                     # Aplicación principal de Streamlit
-├── .streamlit/                     # Configuración de Streamlit
-│   └── config.toml                # Configuración del servidor y tema
-├── pages/                          # Páginas de la aplicación Streamlit
-│   ├── 1_Gradient_Boosting.py     # Modelo Gradient Boosting 
-│   ├── 2_Random_Forest.py         # Modelo Random Forest
-│   └── 3_Best_Model.py            # Sistema dinámico 
 ├── .github/workflows/             # Automatización (CI/CD)
 │   └── main.yml
+├── .streamlit/                     # Configuración de Streamlit
+│   └── config.toml                # Configuración del servidor y tema
+├──Dashboard
+   └── Dashboard-Coffee Quality Intelligence  # Arhivo .pbix con dashboard interactivo
+   └── Images                      # Carpeta de imagenes del dashboard
 ├── data/                       # Datos del proyecto
 │   ├── raw/                    # Dataset original
 │   └── processed/              # Datos limpios y procesados
 ├── metrics/                    # Reportes de performance
 │   ├── model_comparison_ranking.csv
 │   └── best_model_summary.txt
-├── mlruns/                     # Tracking de experimentos (Local)
-├── .github/workflows/         # Automatización (CI/CD)
-│   └── main.yml
-├── data/                       # Datos del proyecto
-│   ├── raw/                    # Dataset original
-│   └── processed/              # Datos limpios y procesados
-├── metrics/                   # Reportes de performance
-│   ├── model_comparison_ranking.csv
-│   └── best_model_summary.txt
-├── mlruns/                    # Tracking de experimentos (Local)
+├── mlruns/                     # Tracking de experimentos
 ├── models/                    # Modelos entrenados
 │   ├── prediction/            # Modelos de predicción
 │   └── recommender/           # Modelos de clustering
@@ -41,10 +30,10 @@ DataScienceHenryBootCampPF/
 │   ├── 01_EDA.ipynb           # Análisis Exploratorio de Datos
 │   ├── 02_model_analysis.ipynb # Modelos de predicción
 │   └── 03_clusterizacion.ipynb # Sistema de recomendación
-├── src/                       # Código fuente
-│   ├── cleaning.py            # Funciones de limpieza
-│   ├── predictor/             # Módulo de predicción
-│   └── recommender/           # Módulo de recomendación
+├── pages/                         # Páginas de la aplicación Streamlit
+│   ├── 1_Gradient_Boosting.py     # Modelo Gradient Boosting 
+│   ├── 2_Random_Forest.py         # Modelo Random Forest
+│   └── 3_Best_Model.py            # Sistema dinámico
 ├── reports/                   # Reportes y visualizaciones
 │   └── EDA/                   # Análisis exploratorio
 │       ├── EDA_REPORT.md      # Reporte completo del EDA
@@ -53,7 +42,11 @@ DataScienceHenryBootCampPF/
 │       └── mlflow_md
 │   └── validation/            # Plan de validación de mediciones
 │       └── validation_plan 
-├── metrics/                   # Métricas de evaluación
+├── src/                       # Código fuente
+│   ├── cleaning.py            # Funciones de limpieza
+│   ├── predictor/             # Módulo de predicción
+│   └── recommender/           # Módulo de recomendación
+├── app_main.py                     # Aplicación principal de Streamlit
 ├── demo_prediction.py         # Demo de predicción
 ├── demo_recommender.py        # Demo de recomendación
 └── requirements.txt           # Dependencias del proyecto
@@ -85,6 +78,28 @@ pip install -r requirements.txt
 ### 🎯 Objetivo Principal
 Analizar 1,339 registros de evaluaciones técnicas de café de todo el mundo para identificar patrones que determinen la calidad del grano.
 
+## 📋 Diccionario de Datos
+
+### Identidad y Trazabilidad
+- **Species**: Especie botánica (Arabica/Robusta)
+- **Country.of.Origin**: País de procedencia
+- **Region**: Zona geográfica específica
+- **Altitude**: Rango de altitud de cultivo
+
+### Atributos Sensoriales (0-10 puntos)
+- **Aroma**: Fragancia del café
+- **Flavor**: Intensidad y calidad del sabor
+- **Aftertaste**: Calidad del sabor remanente
+- **Acidity**: Nivel de brillantez
+- **Body**: Textura y sensación
+- **Balance**: Equilibrio general
+- **Total.Cup.Points**: Puntaje final (Target)
+
+### Atributos Físicos
+- **Moisture**: Grado de humedad
+- **Color**: Tono visual del grano
+- **Category.One/Two.Defects**: Conteo de defectos
+
 ### 🔍 Hallazgos Clave
 
 #### 1. **Distribución de la Calidad**
@@ -115,9 +130,9 @@ Se observa una caída en puntajes máximos desde 2015-2018, reflejando mayor rig
 ## 🤖 Modelos de Machine Learning
 
 ### 📈 Modelo de Predicción de Calidad
-- **Algoritmos evaluados**: XGBoost, CatBoost, Random Forest, SVM
+- **Algoritmos evaluados**: XGBoost, CatBoost, Random Forest, SVR, LinearRegression, Voting_Ensemble
 - **Target**: Total Cup Points (0-100)
-- **Features**: Altitud, país, especie, atributos sensoriales
+- **Features**: Altitud, país, especie, método de lavado
 - **Métricas**: RMSE, MAE, R²
 
 ### 🎯 Sistema de Recomendación
@@ -146,7 +161,7 @@ Se observa una caída en puntajes máximos desde 2015-2018, reflejando mayor rig
 
 ## Ciclo de Vida del Modelo (MLOps)
 
-Para garantizar la reproducibilidad y la mejora continua de DataMark, hemos implementado una infraestructura de MLOps robusta:
+Para garantizar la reproducibilidad y la mejora continua del proyecto, hemos implementado una infraestructura de MLOps robusta:
 
 1. Experiment Tracking con MLflow
 
@@ -177,31 +192,9 @@ python demo_recommender.py
 ```
 Ofrece recomendaciones personalizadas basadas en perfiles de preferencia.
 
-## 📋 Diccionario de Datos
-
-### Identidad y Trazabilidad
-- **Species**: Especie botánica (Arabica/Robusta)
-- **Country.of.Origin**: País de procedencia
-- **Region**: Zona geográfica específica
-- **Altitude**: Rango de altitud de cultivo
-
-### Atributos Sensoriales (0-10 puntos)
-- **Aroma**: Fragancia del café
-- **Flavor**: Intensidad y calidad del sabor
-- **Aftertaste**: Calidad del sabor remanente
-- **Acidity**: Nivel de brillantez
-- **Body**: Textura y sensación
-- **Balance**: Equilibrio general
-- **Total.Cup.Points**: Puntaje final (Target)
-
-### Atributos Físicos
-- **Moisture**: Grado de humedad
-- **Color**: Tono visual del grano
-- **Category.One/Two.Defects**: Conteo de defectos
-
 ## 🏆 Resultados Principales
 
-1. **Predicción de Calidad**: Modelos XGBoost y CatBoost logran RMSE < 2.5 puntos
+1. **Predicción de Calidad**: El modelo SVR logró la merjor performance para predecir RMSE = 1.9 puntos
 2. **Segmentación de Mercado**: 3 clusters bien definidos con perfiles sensoriales distintos
 3. **Insights de Negocio**: La altitud no es el factor determinante; el procesamiento humano es clave
 4. **Recomendación Personalizada**: Sistema capaz de sugerir cafés según preferencias individuales
@@ -228,11 +221,33 @@ Streamlit Cloud es la forma más sencilla de desplegar aplicaciones Streamlit. F
 - **HTTPS incluido** por defecto
 
 ### Características de nuestra implementación:
-- **Modelos de Machine Learning**: Random Forest, Gradient Boosting, Best Model
+- **Modelos de Machine Learning**: Random Forest, Gradient Boosting, SVR, K-means
 - **Sistema de recomendación**: Búsqueda inteligente de cafés
 - **Visualizaciones interactivas**: Gráficos con Plotly
 - **Interfaz moderna**: Diseño responsivo con Streamlit
 - **Procesamiento en tiempo real**: Predicciones instantáneas
+
+### Dashboard interactivo
+
+Al implementar Power BI logramos transformar algoritmos complejos en una herramienta visual que permite a un negocio de café predecir la calidad de sus compras, segmentar a sus clientes por perfil de sabor y reducir el riesgo de pagar de más por un producto que no cumple con los estándares Premium
+
+![DescripcionMuestra](Dashboard/Images/1-Descripcion-Muestra.png)
+
+![OirgenProcesamient](Dashboard/Images/3-Origen-Procesamiento.png)
+
+![OirgenProcesamient](Dashboard/Images/5-Modelo-de-Recomendacion.png)
+
+### Conclusión
+
+El proyecto logró transformar la subjetividad sensorial del café en un sistema de decisiones auditable y escalable. A través de la implementación de SVR y K-Means, no solo eliminamos la incertidumbre en la predicción de calidad, sino que logramos segmentar el mercado en perfiles de sabor claros (Vibrante, Equilibrado e Intenso).
+
+Puntos clave del valor entregado:
+
+   - Validación de Calidad: Mediante el modelo SVR (AUC 0.73), el e-commerce ahora cuenta con un "catador digital" que valida el puntaje de los granos, reduciendo la asimetría de información entre el productor y el comprador final.
+
+   - Personalización del Cliente: La clusterización permitió pasar de una venta genérica a una experiencia de usuario dirigida, donde la consistencia del sabor está garantizada por la proximidad matemática en nuestros grupos de datos.
+
+   - Robustez Productiva: La integración con MLflow asegura que cada modelo es reproducible y profesional, mientras que el dashboard en Power BI democratiza el acceso a estos hallazgos para la toma de decisiones comerciales.
 
 ## 📚 Tecnologías Utilizadas
 
@@ -242,14 +257,13 @@ Streamlit Cloud es la forma más sencilla de desplegar aplicaciones Streamlit. F
 - **XGBoost & CatBoost**: Gradient Boosting
 - **Matplotlib & Seaborn**: Visualización
 - **Jupyter**: Análisis interactivo
-- MLflow: Gestión del ciclo de vida de ML y tracking de experimentos.
-- GitHub Actions: Automatización de workflows y CI/CD.
-- Joblib: Serialización de modelos para producción.
+- **MLflow**: Gestión del ciclo de vida de ML y tracking de experimentos.
+- **GitHub Actions**: Automatización de workflows y CI/CD.
+- **Joblib**: Serialización de modelos para producción.
+- **Power Bi**: Dashboard interactivo
 
 ## 👥 Contribuciones
 
 Este proyecto fue desarrollado como parte del Bootcamp de Data Science de Henry, aplicando metodologías de ciencia de datos para resolver un problema real del mercado del café de especialidad.
 
 ---
-
-**📧 Contacto**: Para más información sobre este proyecto, consulte los notebooks en la carpeta `notebooks/` o ejecute las demos interactivas.
